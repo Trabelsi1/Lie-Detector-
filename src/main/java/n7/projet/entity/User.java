@@ -1,10 +1,13 @@
 package n7.projet.entity;
 
+import java.time.LocalDateTime;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToOne;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -20,8 +23,30 @@ public class User {
 
     private String email;
 
+    private String password;
+
+    private LocalDateTime createdAt;
+
     @ManyToMany(mappedBy = "users")
     private Set<GameRoom> rooms = new HashSet<>();
+
+    @OneToOne(mappedBy = "user")
+    private PlayerProfile profile;
+
+    @OneToMany(mappedBy = "sender")
+    private Set<Invitation> invitationsSent = new HashSet<>();
+
+    @OneToMany(mappedBy = "receiver")
+    private Set<Invitation> invitationsReceived = new HashSet<>();
+
+    @OneToMany(mappedBy = "voter")
+    private Set<Vote> votes = new HashSet<>();
+
+    @OneToMany(mappedBy = "sender")
+    private Set<ChatMessage> chatMessages = new HashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    private Set<ScoreEntry> scoreEntries = new HashSet<>();
 
     public User() {
     }
@@ -29,6 +54,7 @@ public class User {
     public User(String username, String email) {
         this.username = username;
         this.email = email;
+        this.createdAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -55,11 +81,35 @@ public class User {
         this.email = email;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public Set<GameRoom> getRooms() {
         return rooms;
     }
 
     public void setRooms(Set<GameRoom> rooms) {
         this.rooms = rooms;
+    }
+
+    public PlayerProfile getProfile() {
+        return profile;
+    }
+
+    public void setProfile(PlayerProfile profile) {
+        this.profile = profile;
     }
 }

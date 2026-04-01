@@ -1,5 +1,6 @@
 package n7.projet.entity;
 
+import java.time.LocalDateTime;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -7,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -22,9 +24,19 @@ public class GameRoom {
 
     private String status;
 
+    private int maxPlayers;
+
+    private LocalDateTime createdAt;
+
     @ManyToMany
     @JoinTable(name = "game_room_users", joinColumns = @JoinColumn(name = "room_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> users = new HashSet<>();
+
+    @OneToMany(mappedBy = "gameRoom")
+    private Set<Game> games = new HashSet<>();
+
+    @OneToMany(mappedBy = "gameRoom")
+    private Set<Invitation> invitations = new HashSet<>();
 
     public GameRoom() {
     }
@@ -32,6 +44,7 @@ public class GameRoom {
     public GameRoom(String roomCode, String status) {
         this.roomCode = roomCode;
         this.status = status;
+        this.createdAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -58,11 +71,35 @@ public class GameRoom {
         this.status = status;
     }
 
+    public int getMaxPlayers() {
+        return maxPlayers;
+    }
+
+    public void setMaxPlayers(int maxPlayers) {
+        this.maxPlayers = maxPlayers;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public Set<User> getUsers() {
         return users;
     }
 
     public void setUsers(Set<User> users) {
         this.users = users;
+    }
+
+    public Set<Game> getGames() {
+        return games;
+    }
+
+    public void setGames(Set<Game> games) {
+        this.games = games;
     }
 }
