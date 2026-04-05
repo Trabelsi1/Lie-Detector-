@@ -1,10 +1,12 @@
 package n7.projet.service;
 
-import n7.projet.entity.User;
-import n7.projet.repository.UserRepository;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import n7.projet.entity.User;
+import n7.projet.repository.UserRepository;
 
 @Service
 public class UserService {
@@ -16,6 +18,9 @@ public class UserService {
     }
 
     public User createUser(User user) {
+        if (user.getCreatedAt() == null) {
+            user.setCreatedAt(LocalDateTime.now());
+        }
         return userRepository.save(user);
     }
 

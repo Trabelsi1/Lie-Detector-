@@ -1,18 +1,17 @@
 package n7.projet.entity;
 
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToOne;
 
-import java.util.HashSet;
-import java.util.Set;
-
 @Entity
+@JsonIgnoreProperties({ "player" })
 public class User {
 
     @Id
@@ -20,33 +19,12 @@ public class User {
     private Long id;
 
     private String username;
-
     private String email;
-
     private String password;
-
     private LocalDateTime createdAt;
 
-    @ManyToMany(mappedBy = "users")
-    private Set<GameRoom> rooms = new HashSet<>();
-
-    @OneToOne(mappedBy = "user")
-    private PlayerProfile profile;
-
-    @OneToMany(mappedBy = "sender")
-    private Set<Invitation> invitationsSent = new HashSet<>();
-
-    @OneToMany(mappedBy = "receiver")
-    private Set<Invitation> invitationsReceived = new HashSet<>();
-
-    @OneToMany(mappedBy = "voter")
-    private Set<Vote> votes = new HashSet<>();
-
-    @OneToMany(mappedBy = "sender")
-    private Set<ChatMessage> chatMessages = new HashSet<>();
-
-    @OneToMany(mappedBy = "user")
-    private Set<ScoreEntry> scoreEntries = new HashSet<>();
+    @OneToOne(mappedBy = "user", optional = true)
+    private Player player;
 
     public User() {
     }
@@ -97,19 +75,11 @@ public class User {
         this.createdAt = createdAt;
     }
 
-    public Set<GameRoom> getRooms() {
-        return rooms;
+    public Player getPlayer() {
+        return player;
     }
 
-    public void setRooms(Set<GameRoom> rooms) {
-        this.rooms = rooms;
-    }
-
-    public PlayerProfile getProfile() {
-        return profile;
-    }
-
-    public void setProfile(PlayerProfile profile) {
-        this.profile = profile;
+    public void setPlayer(Player player) {
+        this.player = player;
     }
 }

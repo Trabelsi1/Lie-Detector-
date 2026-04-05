@@ -21,7 +21,7 @@ public class ChatMessage {
 
     @ManyToOne
     @JoinColumn(name = "sender_id")
-    private User sender;
+    private Player sender;
 
     @ManyToOne
     @JoinColumn(name = "round_id")
@@ -30,7 +30,7 @@ public class ChatMessage {
     public ChatMessage() {
     }
 
-    public ChatMessage(String content, LocalDateTime sentAt, User sender, Round round) {
+    public ChatMessage(String content, LocalDateTime sentAt, Player sender, Round round) {
         this.content = content;
         this.sentAt = sentAt;
         this.sender = sender;
@@ -61,11 +61,11 @@ public class ChatMessage {
         this.sentAt = sentAt;
     }
 
-    public User getSender() {
+    public Player getSender() {
         return sender;
     }
 
-    public void setSender(User sender) {
+    public void setSender(Player sender) {
         this.sender = sender;
     }
 

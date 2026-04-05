@@ -21,17 +21,17 @@ public class ScoreEntry {
     private Game game;
 
     @ManyToOne
-    private User user;
+    private Player player;
 
     public ScoreEntry() {
     }
 
-    public ScoreEntry(int points, int correctGuesses, int playersFooled, Game game, User user) {
+    public ScoreEntry(int points, int correctGuesses, int playersFooled, Game game, Player player) {
         this.points = points;
         this.correctGuesses = correctGuesses;
         this.playersFooled = playersFooled;
         this.game = game;
-        this.user = user;
+        this.player = player;
     }
 
     public Long getId() {
@@ -74,12 +74,11 @@ public class ScoreEntry {
         this.game = game;
     }
 
-    public User getUser() {
-        return user;
+    public Player getPlayer() {
+        return player;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setPlayer(Player player) {
+        this.player = player;
     }
-
 }

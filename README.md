@@ -1,67 +1,86 @@
-# Lie Detector - Two Truths and a Lie
+# Lie Detector Arena
 
 ## Project Idea
-Lie Detector is a multiplayer web application based on the classic social game **Two Truths and a Lie**.
+Lie Detector Arena is a multiplayer web application inspired by **Two Truths and a Lie**.
 
-Each player joins a shared game room, submits three statements (two true, one false), and other players try to detect the lie. The game is designed to be social, fast to play, and suitable for short rounds with multiple participants.
+Players join a room, take part in rounds, submit statements, discuss them, and try to identify the lie. The long-term goal is to build a complete multiplayer experience with room management, round progression, voting, scoring, and player statistics.
 
-### Core gameplay vision
-- Players create or join a room using a room code.
-- Every round, a player submits three statements.
-- Other players vote on which statement is the lie.
-- The system evaluates answers and tracks round outcomes.
+## Current Technical Direction
+The project is now built as a **Spring Boot backend exposing a REST API**.
 
-The long-term goal is a complete multiplayer experience with clear room management, round progression, and interactive feedback for all players.
+This is a change from the previous `Servlet + JSP` direction. The backend is responsible for:
+- domain modeling
+- persistence with JPA
+- business logic through services
+- HTTP endpoints through `RestController`
 
-## Architecture
-The project follows a classic **MVC architecture** with:
-- **Model**: domain entities and persistence layer (JPA)
-- **View**: JSP pages for user interfaces
-- **Controller**: Servlets handling HTTP requests and application flow
-
-### MVC responsibilities in this project
-- **Model**
-  - Represents core business objects and relationships.
-  - Handles persistence through Spring Data JPA repositories.
-  - Exposes business operations through service classes.
-
-- **Controller (Servlet layer)**
-  - Receives client requests (create room, join room, submit content, vote).
-  - Calls services for business actions.
-  - Forwards data to JSP views.
-
-- **View (JSP layer)**
-  - Displays pages for room actions and game interaction.
-  - Renders state sent by servlet controllers.
-
+A JavaScript frontend may be added later and will consume the REST API.
 
 ## Technology Stack
-- Java
-- Spring framework
+- Java 17
+- Spring Boot
 - Spring Data JPA
+- Spring Web
 - Maven
 - Jakarta Persistence API
-- Servlet + JSP 
+- HSQLDB runtime dependency
 
-## What Is Implemented at This Stage
-Current implementation focuses on the **backend domain foundation**.
+## Current Architecture
+The project currently follows this structure:
+- **Entity layer**: domain model of the game
+- **Repository layer**: Spring Data JPA repositories
+- **Service layer**: business logic and orchestration
+- **Controller layer**: REST endpoints returning JSON
 
-### 1. JPA entities
-- `User`
-  - Fields: `id`, `username`, `email`
+## Domain Model
+The current model includes the following main entities:
+- `User`: application account
+- `Player`: gameplay participant derived from a user account
+- `PlayerProfile`: gameplay statistics and behavioral indicators for a player
 - `GameRoom`
-  - Fields: `id`, `roomCode`, `status`
+- `Invitation`
+- `Game`
+- `Round`
+- `Statement`
+- `Vote`
+- `ChatMessage`
+- `ScoreEntry`
 
-### 2. Relationship modeling
-- Many-to-many association between users and rooms:
-  - A user can join multiple game rooms.
-  - A game room can contain multiple users.
+### Important Modeling Choice
+`User` and `Player` are now separated.
 
-### 3. Persistence layer
-- `UserRepository` extending `JpaRepository<User, Long>`
-- `GameRoomRepository` extending `JpaRepository<GameRoom, Long>`
+- A `User` represents an application account.
+- A `User` is **not necessarily** a player.
+- A `Player` is created when a user actually participates in the gameplay layer.
+- `PlayerProfile` stores the gameplay statistics of a `Player`.
 
-### 4. Service layer
+This means a user can exist first, then become a player later.
+
+## What Is Implemented
+
+### 1. Entities
+The backend already contains a richer domain model than in the first iteration:
+- user accounts
+- players and player profiles
+- game rooms
+- invitations
+- games and rounds
+- statements
+- votes
+- chat messages
+- score entries
+
+### 2. Repositories
+The project already contains repositories for persistence queries, including:
+- `UserRepository`
+- `PlayerRepository`
+- `GameRoomRepository`
+- `RoundRepository`
+- `StatementRepository`
+- `VoteRepository`
+
+### 3. Services
+Current service layer:
 - `UserService`
   - `createUser(User user)`
   - `getAllUsers()`
@@ -72,13 +91,51 @@ Current implementation focuses on the **backend domain foundation**.
   - `getRoomById(Long id)`
   - `addUserToRoom(Long roomId, Long userId)`
 
+When a user is added to a room, the service can create the corresponding `Player` and `PlayerProfile` if they do not exist yet.
 
-## Planned Next Steps
-- Implement servlet controllers for room and game actions.
-- Create JSP pages for player interactions.
-- Add gameplay domain parts (rounds, statements, votes, scoring).
-- Connect end-to-end flow from HTTP request to persisted game state and rendered UI.
-- Add real-time and multiplayer interaction improvements.
+### 4. REST Controllers
+The first REST controllers are already implemented:
+- `UserController`
+- `GameRoomController`
 
-## Quick Summary
-Lie Detector is being built as an MVC web app for the Two Truths and a Lie game. The current stage establishes the model and backend foundations (entities, relationships, repositories, and services), preparing the project for the next phase: servlet controllers, JSP views, and full gameplay logic.
+Current available endpoints:
+- `POST /api/users`
+- `GET /api/users`
+- `GET /api/users/{id}`
+- `POST /api/rooms`
+- `GET /api/rooms`
+- `GET /api/rooms/{id}`
+- `POST /api/rooms/{roomId}/users/{userId}`
+
+## What Is Not Done Yet
+- full gameplay service layer for all entities
+- dedicated controllers for rounds, statements, votes, chat, scores, and invitations
+- DTOs and validation
+- authentication / security
+- frontend JavaScript integration
+- real-time multiplayer features
+- complete test coverage
+
+## Running the Project
+To compile the project:
+
+```bash
+./mvnw compile
+```
+
+To run the Spring Boot application:
+
+```bash
+./mvnw spring-boot:run
+```
+
+## Next Steps
+- extend the REST API to the remaining gameplay entities
+- improve request/response design with DTOs
+- add validation and error handling
+- connect a JavaScript frontend
+- implement tests
+- refine multiplayer game flow
+
+## Summary
+Lie Detector Arena is currently a Spring Boot REST backend with a structured domain model and first working API endpoints. The project has moved away from the old `Servlet + JSP` strategy and now prepares for a cleaner backend/API-first architecture.

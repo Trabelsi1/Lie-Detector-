@@ -19,10 +19,10 @@ public class Invitation {
     private LocalDateTime sentAt;
 
     @ManyToOne
-    private User sender;
+    private Player sender;
 
     @ManyToOne
-    private User receiver;
+    private Player receiver;
 
     @ManyToOne
     private GameRoom gameRoom;
@@ -30,7 +30,7 @@ public class Invitation {
     public Invitation() {
     }
 
-    public Invitation(String status, LocalDateTime sentAt, User sender, User receiver, GameRoom gameRoom) {
+    public Invitation(String status, LocalDateTime sentAt, Player sender, Player receiver, GameRoom gameRoom) {
         this.status = status;
         this.sentAt = sentAt;
         this.sender = sender;
@@ -62,19 +62,19 @@ public class Invitation {
         this.sentAt = sentAt;
     }
 
-    public User getSender() {
+    public Player getSender() {
         return sender;
     }
 
-    public void setSender(User sender) {
+    public void setSender(Player sender) {
         this.sender = sender;
     }
 
-    public User getReceiver() {
+    public Player getReceiver() {
         return receiver;
     }
 
-    public void setReceiver(User receiver) {
+    public void setReceiver(Player receiver) {
         this.receiver = receiver;
     }
 
@@ -85,5 +85,4 @@ public class Invitation {
     public void setGameRoom(GameRoom gameRoom) {
         this.gameRoom = gameRoom;
     }
-
 }

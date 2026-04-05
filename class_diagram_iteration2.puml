@@ -1,0 +1,120 @@
+@startuml
+top to bottom direction
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype polyline
+skinparam roundcorner 6
+skinparam nodesep 35
+skinparam ranksep 35
+skinparam classBackgroundColor #F5F5F5
+skinparam classBorderColor #9E9E9E
+skinparam ArrowColor #6F6F6F
+hide methods
+
+title Lie Detector Arena - Updated Class Diagram
+
+class User {
+  id : Long
+  username : String
+  email : String
+  password : String
+  createdAt : LocalDateTime
+}
+
+class Player {
+  id : Long
+}
+
+class PlayerProfile {
+  id : Long
+  deceptionRate : double
+  detectionRate : double
+  archetype : String
+  totalGames : int
+  totalWins : int
+  totalPlayersFooled : int
+}
+
+class GameRoom {
+  id : Long
+  roomCode : String
+  status : String
+  maxPlayers : int
+  createdAt : LocalDateTime
+}
+
+class Invitation {
+  id : Long
+  status : String
+  sentAt : LocalDateTime
+}
+
+class Game {
+  id : Long
+  startTime : LocalDateTime
+  endTime : LocalDateTime
+  status : String
+  currentRoundIndex : int
+}
+
+class Round {
+  id : Long
+  roundNumber : int
+  phase : String
+  speakerId : Long
+  startedAt : LocalDateTime
+  endedAt : LocalDateTime
+}
+
+class Statement {
+  id : Long
+  content : String
+  isLie : boolean
+  position : int
+}
+
+class Vote {
+  id : Long
+  votedAt : LocalDateTime
+}
+
+class ChatMessage {
+  id : Long
+  content : String
+  sentAt : LocalDateTime
+}
+
+class ScoreEntry {
+  id : Long
+  points : int
+  correctGuesses : int
+  playersFooled : int
+}
+
+User "1" -- "0..1" Player : becomes
+Player "1" -- "1" PlayerProfile : has
+Player "0..*" -- "0..*" GameRoom : joins
+
+Player "1" --> "0..*" Invitation : sends
+Invitation "0..*" --> "1" Player : receives
+Invitation "0..*" --> "1" GameRoom : concerns
+
+GameRoom "1" --> "0..*" Game : launches
+Game "1" --> "1..*" Round : has
+Game "1" --> "0..*" ScoreEntry : contains
+ScoreEntry "0..*" --> "1" Player : belongs to
+
+Round "1" --> "3" Statement : contains
+Round "1" --> "0..*" Vote : receives
+Round "1" --> "0..*" ChatMessage : contains
+
+Vote "0..*" --> "1" Player : cast by
+Vote "0..*" --> "1" Statement : targets
+
+ChatMessage "0..*" --> "1" Player : sent by
+
+PlayerProfile ..> User : player comes from user
+PlayerProfile ..> Player : stores gameplay stats
+
+@enduml

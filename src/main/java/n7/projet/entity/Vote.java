@@ -18,7 +18,7 @@ public class Vote {
     private LocalDateTime votedAt;
 
     @ManyToOne
-    private User voter;
+    private Player voter;
 
     @ManyToOne
     private Round round;
@@ -29,7 +29,7 @@ public class Vote {
     public Vote() {
     }
 
-    public Vote(LocalDateTime votedAt, User voter, Round round, Statement statement) {
+    public Vote(LocalDateTime votedAt, Player voter, Round round, Statement statement) {
         this.votedAt = votedAt;
         this.voter = voter;
         this.round = round;
@@ -52,11 +52,11 @@ public class Vote {
         this.votedAt = votedAt;
     }
 
-    public User getVoter() {
+    public Player getVoter() {
         return voter;
     }
 
-    public void setVoter(User voter) {
+    public void setVoter(Player voter) {
         this.voter = voter;
     }
 

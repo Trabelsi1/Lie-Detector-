@@ -1,6 +1,11 @@
 package n7.projet.entity;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -10,10 +15,8 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 
-import java.util.HashSet;
-import java.util.Set;
-
 @Entity
+@JsonIgnoreProperties({ "games" })
 public class GameRoom {
 
     @Id
@@ -21,16 +24,13 @@ public class GameRoom {
     private Long id;
 
     private String roomCode;
-
     private String status;
-
     private int maxPlayers;
-
     private LocalDateTime createdAt;
 
     @ManyToMany
-    @JoinTable(name = "game_room_users", joinColumns = @JoinColumn(name = "room_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
-    private Set<User> users = new HashSet<>();
+    @JoinTable(name = "game_room_players", joinColumns = @JoinColumn(name = "room_id"), inverseJoinColumns = @JoinColumn(name = "player_id"))
+    private Set<Player> players = new HashSet<>();
 
     @OneToMany(mappedBy = "gameRoom")
     private Set<Game> games = new HashSet<>();
@@ -87,12 +87,12 @@ public class GameRoom {
         this.createdAt = createdAt;
     }
 
-    public Set<User> getUsers() {
-        return users;
+    public Set<Player> getPlayers() {
+        return players;
     }
 
-    public void setUsers(Set<User> users) {
-        this.users = users;
+    public void setPlayers(Set<Player> players) {
+        this.players = players;
     }
 
     public Set<Game> getGames() {

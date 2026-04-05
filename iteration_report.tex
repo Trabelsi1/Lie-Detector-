@@ -1,0 +1,199 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[english]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{1.5cm}
+
+    {\Large \textbf{Web Application Project}\par}
+    \vspace{0.3cm}
+    {\Large \textbf{Project Topic: Lie Detector Arena}\par}
+    \vspace{0.6cm}
+    {\large \textbf{Progress Report}\par}
+
+    \vspace{2.8cm}
+
+    {\large \textbf{Project Team}\par}
+    \vspace{0.5cm}
+
+    {\Large \textbf{Mohamed Radhi}\par
+    \vspace{0.15cm}
+    \textbf{Amina Kamal}\par
+    \vspace{0.15cm}
+    \textbf{Houssem Trabelsi}\par
+    \vspace{0.15cm}
+    \textbf{Rayane Kohil}\par}
+
+    \vspace{2.8cm}
+
+    {\large \textbf{April 2026}\par}
+
+    \vfill
+
+    {\large \textbf{ENSEEIHT -- Web Application Project}\par}
+\end{titlepage}
+
+\section{Project Architecture Update}
+
+\subsection{Change of Development Strategy}
+
+During this iteration, we revised the technical direction of the project.  
+In the previous report, the next development steps were based on a \textbf{Servlet + JSP} approach. After reviewing the current state of the implementation, we decided to migrate toward a \textbf{Spring Boot REST architecture}.
+
+This change was motivated by several reasons:
+\begin{itemize}
+    \item the project already relies on Spring Boot and Spring Data JPA,
+    \item the domain model has become richer and better suited to a service-oriented backend,
+    \item a REST architecture is more compatible with a future frontend developed in JavaScript,
+    \item this separation improves maintainability, scalability, and clarity between backend and frontend responsibilities.
+\end{itemize}
+
+The application is therefore now evolving toward a structure where:
+\begin{itemize}
+    \item the \textbf{backend} exposes REST endpoints with Spring Boot,
+    \item the \textbf{frontend} will later consume these endpoints using JavaScript,
+    \item the \textbf{service and persistence layers} remain responsible for business logic and data management.
+\end{itemize}
+
+\subsection{Updated Architectural Vision}
+
+The updated architecture is now based on the following layers:
+\begin{itemize}
+    \item \textbf{Controller Layer}: REST controllers receiving HTTP requests and returning JSON responses,
+    \item \textbf{Service Layer}: business logic and orchestration of game actions,
+    \item \textbf{Persistence Layer}: repositories based on Spring Data JPA,
+    \item \textbf{Domain Model}: entities representing the main concepts of the game.
+\end{itemize}
+
+This evolution replaces the initial server-side rendering logic with a cleaner API-based design.
+
+\section{Implemented Changes}
+
+\subsection{REST Controllers}
+
+The main contribution of this iteration is the introduction of the first \textbf{REST controllers}.
+
+Two REST controllers were implemented:
+\begin{itemize}
+    \item \texttt{UserController}
+    \item \texttt{GameRoomController}
+\end{itemize}
+
+These controllers provide the first API endpoints of the application.
+
+\paragraph{User endpoints}
+\begin{itemize}
+    \item \texttt{POST /api/users}: create a new user
+    \item \texttt{GET /api/users}: retrieve all users
+    \item \texttt{GET /api/users/\{id\}}: retrieve one user by id
+\end{itemize}
+
+\paragraph{Game room endpoints}
+\begin{itemize}
+    \item \texttt{POST /api/rooms}: create a new game room
+    \item \texttt{GET /api/rooms}: retrieve all rooms
+    \item \texttt{GET /api/rooms/\{id\}}: retrieve one room by id
+    \item \texttt{POST /api/rooms/\{roomId\}/users/\{userId\}}: add a user to a room
+\end{itemize}
+
+\subsection{Service Layer Adjustments}
+
+Some adjustments were also made in the service layer:
+\begin{itemize}
+    \item automatic initialization of creation dates when needed,
+    \item better preparation of the services for REST-based interactions.
+\end{itemize}
+
+\subsection{Entity Serialization Adjustments}
+
+Because the project uses JPA entities with bidirectional relationships, JSON serialization could create infinite recursion problems.  
+To avoid this, serialization-related adjustments were introduced in the entity layer so that REST responses remain stable and usable.
+
+\subsection{Refinement of the User and Player Model}
+
+Compared with the previous iteration, we also refined the relationship between \texttt{User}, \texttt{Player}, and \texttt{PlayerProfile}.  
+In the earlier version of the model, the distinction between a general user account and a player role was not made explicit enough. In this iteration, we restructured the domain model by introducing a dedicated \texttt{Player} entity. A \texttt{User} now represents an application account, while a \texttt{Player} represents a user who actually participates in the game. As a consequence, a \texttt{User} is not necessarily a player by default and may become a player later. The gameplay-related statistics are attached to the \texttt{Player} through \texttt{PlayerProfile}.
+
+This change improves the semantic clarity of the domain model by distinguishing:
+\begin{itemize}
+    \item a \texttt{User} as a general application account,
+    \item a \texttt{Player} as a user involved in the gameplay layer,
+    \item a \texttt{PlayerProfile} as the structure storing gameplay metrics and behavioral statistics for a player.
+\end{itemize}
+
+\section{Class Diagram Update}
+
+The class diagram was updated to reflect the new state of the project.  
+Compared with the previous iteration, the model is now more complete and more consistent with the actual implementation.
+
+The updated diagram includes the main entities of the system:
+\begin{itemize}
+    \item \texttt{User}
+    \item \texttt{Player}
+    \item \texttt{PlayerProfile}
+    \item \texttt{GameRoom}
+    \item \texttt{Invitation}
+    \item \texttt{Game}
+    \item \texttt{Round}
+    \item \texttt{Statement}
+    \item \texttt{Vote}
+    \item \texttt{ChatMessage}
+    \item \texttt{ScoreEntry}
+\end{itemize}
+
+This updated class diagram better represents:
+\begin{itemize}
+    \item user management,
+    \item the optional nature of the player profile,
+    \item room participation,
+    \item game and round progression,
+    \item voting and statement handling,
+    \item score tracking and player profiling.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{class_diagram_iteration2.png}
+    \caption{Updated class diagram of the system}
+    \label{fig:class-diagram-iteration2}
+\end{figure}
+
+\section{Iteration Outcome}
+
+This iteration represents an important architectural transition.  
+The project is no longer oriented toward a \textbf{Servlet/JSP-based MVC implementation}, but toward a \textbf{Spring Boot REST backend} that will later be connected to a JavaScript frontend.
+
+At this stage, the backend now has:
+\begin{itemize}
+    \item a richer domain model,
+    \item a persistence layer already in place,
+    \item a service layer for the main operations,
+    \item the first REST endpoints available.
+\end{itemize}
+
+Tests and frontend integration were intentionally postponed to later iterations in order to first establish a clean and functional backend structure.
+
+\section{Next Steps}
+
+The next iterations will focus on:
+\begin{itemize}
+    \item extending the REST API to other entities such as rounds, statements, and votes,
+    \item integrating a JavaScript frontend,
+    \item adding validation and better request/response structures,
+    \item implementing tests,
+    \item improving the overall game flow.
+\end{itemize}
+
+\end{document}

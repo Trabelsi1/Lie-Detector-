@@ -1,29 +1,31 @@
 package n7.projet.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 
 @Entity
+@JsonIgnoreProperties({ "player" })
 public class PlayerProfile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private double deceptionRate;
-
     private double detectionRate;
-
     private String archetype;
-
     private int totalGames;
     private int totalWins;
     private int totalPlayersFooled;
 
-    @OneToOne
-    private User user;
+    @OneToOne(optional = false)
+    @JoinColumn(name = "player_id", unique = true)
+    private Player player;
 
     public PlayerProfile() {
     }
@@ -94,12 +96,11 @@ public class PlayerProfile {
         this.totalPlayersFooled = totalPlayersFooled;
     }
 
-    public User getUser() {
-        return user;
+    public Player getPlayer() {
+        return player;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setPlayer(Player player) {
+        this.player = player;
     }
-
 }
