@@ -1,0 +1,51 @@
+package n7.projet.controller;
+
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import n7.projet.entity.ChatMessage;
+import n7.projet.service.ChatMessageService;
+
+@RestController
+@RequestMapping("/api/messages")
+public class ChatMessageController {
+
+    private final ChatMessageService chatMessageService;
+
+    public ChatMessageController(ChatMessageService chatMessageService) {
+        this.chatMessageService = chatMessageService;
+    }
+
+    @PostMapping
+    public ResponseEntity<ChatMessage> createMessage(@RequestBody ChatMessage message) {
+        ChatMessage createdMessage = chatMessageService.createMessage(message);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdMessage);
+    }
+
+    @GetMapping
+    public List<ChatMessage> getAllMessages() {
+        return chatMessageService.getAllMessages();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ChatMessage> getMessageById(@PathVariable Long id) {
+        ChatMessage message = chatMessageService.getMessageById(id);
+        if (message == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(message);
+    }
+
+    @GetMapping("/round/{roundId}")
+    public List<ChatMessage> getMessagesByRoundId(@PathVariable Long roundId) {
+        return chatMessageService.getMessagesByRoundId(roundId);
+    }
+}
