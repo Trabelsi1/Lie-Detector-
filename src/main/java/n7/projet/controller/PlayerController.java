@@ -30,6 +30,16 @@ public class PlayerController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdPlayer);
     }
 
+    @PostMapping("/from-user/{userId}")
+    public ResponseEntity<Player> createPlayerFromUser(@PathVariable Long userId) {
+        Player player = new Player();
+        n7.projet.entity.User user = new n7.projet.entity.User();
+        user.setId(userId);
+        player.setUser(user);
+        Player createdPlayer = playerService.createPlayer(player);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdPlayer);
+    }
+
     @GetMapping
     public List<Player> getAllPlayers() {
         return playerService.getAllPlayers();

@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -57,5 +58,22 @@ public class RoundController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(round);
+    }
+
+    @PutMapping("/{roundId}/advance-phase")
+    public ResponseEntity<Round> advancePhase(@PathVariable Long roundId) {
+        Round round = roundService.advancePhase(roundId);
+        return ResponseEntity.ok(round);
+    }
+
+    @GetMapping("/{roundId}/can-vote/{playerId}")
+    public ResponseEntity<Boolean> canPlayerVote(@PathVariable Long roundId, @PathVariable Long playerId) {
+        Round round = roundService.getRoundById(roundId);
+        if (round == null) {
+            return ResponseEntity.notFound().build();
+        }
+        // Player can vote if they are NOT the speaker and round is in VOTING phase
+        boolean canVote = !playerId.equals(round.getSpeakerId()) && roundService.isInVotingPhase(roundId);
+        return ResponseEntity.ok(canVote);
     }
 }

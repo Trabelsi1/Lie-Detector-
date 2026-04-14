@@ -3,7 +3,9 @@ package n7.projet.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import n7.projet.entity.Player;
 import n7.projet.entity.Round;
@@ -38,16 +40,31 @@ public class VoteService {
         return voteRepository.save(vote);
     }
 
-    public Vote createVote(Long roundId, Long voterId, Long statementId) {
-        Round round = roundRepository.findById(roundId).orElse(null);
-        Player voter = playerRepository.findById(voterId).orElse(null);
-        Statement statement = statementRepository.findById(statementId).orElse(null);
+    public Vote createVote(Long roundId, Long voterId, Long statementId)
+            throws ResponseStatusException {
+        Round round = roundRepository.findById(roundId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Round not found"));
+        Player voter = playerRepository.findById(voterId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Voter not found"));
+        Statement statement = statementRepository.findById(statementId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Statement not found"));
 
-        if (round == null || voter == null || statement == null) {
-            return null;
+        // Voter cannot be the speaker
+        if (round.getSpeakerId() != null && round.getSpeakerId().equals(voterId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Speaker cannot vote on their own statements");
         }
+
+        // Check if voter already voted in this round
         if (voteRepository.existsByRoundIdAndVoterId(roundId, voterId)) {
-            return null;
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Player has already voted in this round");
+        }
+
+        // Check round is in VOTING phase
+        if (round.getPhase() == null || !round.getPhase().equals("VOTING")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Round is not in voting phase");
         }
 
         Vote vote = new Vote();
@@ -72,5 +89,9 @@ public class VoteService {
 
     public boolean hasPlayerVoted(Long roundId, Long voterId) {
         return voteRepository.existsByRoundIdAndVoterId(roundId, voterId);
+    }
+
+    public List<Vote> getVotesByRoundId(Long roundId) {
+        return voteRepository.findByRoundId(roundId);
     }
 }

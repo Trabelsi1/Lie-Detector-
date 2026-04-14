@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import n7.projet.entity.Game;
+import n7.projet.entity.Round;
 import n7.projet.service.GameService;
 
 @RestController
@@ -47,5 +48,20 @@ public class GameController {
     @GetMapping("/room/{roomId}")
     public List<Game> getGamesByRoomId(@PathVariable Long roomId) {
         return gameService.getGamesByRoomId(roomId);
+    }
+
+    @PostMapping("/{gameId}/start-round")
+    public ResponseEntity<Round> startRound(@PathVariable Long gameId) {
+        Round round = gameService.startRound(gameId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(round);
+    }
+
+    @GetMapping("/{gameId}/current-round")
+    public ResponseEntity<Round> getCurrentRound(@PathVariable Long gameId) {
+        Round round = gameService.getCurrentRound(gameId);
+        if (round == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(round);
     }
 }

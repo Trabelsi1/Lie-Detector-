@@ -29,6 +29,10 @@ public class Round {
     @JoinColumn(name = "game_id")
     private Game game;
 
+    @ManyToOne
+    @JoinColumn(name = "speaker_id", insertable = false, updatable = false)
+    private Player speaker;
+
     @OneToMany(mappedBy = "round")
     private Set<Vote> votes = new HashSet<>();
 
@@ -97,6 +101,46 @@ public class Round {
 
     public void setEndedAt(LocalDateTime endedAt) {
         this.endedAt = endedAt;
+    }
+
+    public Game getGame() {
+        return game;
+    }
+
+    public void setGame(Game game) {
+        this.game = game;
+    }
+
+    public Set<Vote> getVotes() {
+        return votes;
+    }
+
+    public void setVotes(Set<Vote> votes) {
+        this.votes = votes;
+    }
+
+    public Set<Statement> getStatements() {
+        return statements;
+    }
+
+    public void setStatements(Set<Statement> statements) {
+        this.statements = statements;
+    }
+
+    public Set<ChatMessage> getChatMessages() {
+        return chatMessages;
+    }
+
+    public void setChatMessages(Set<ChatMessage> chatMessages) {
+        this.chatMessages = chatMessages;
+    }
+
+    public Player getSpeaker() {
+        return speaker;
+    }
+
+    public void setSpeaker(Player speaker) {
+        this.speaker = speaker;
     }
 
 }

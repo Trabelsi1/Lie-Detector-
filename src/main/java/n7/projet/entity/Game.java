@@ -94,4 +94,20 @@ public class Game {
         this.gameRoom = gameRoom;
     }
 
+    public List<Round> getRounds() {
+        return rounds;
+    }
+
+    public void setRounds(List<Round> rounds) {
+        this.rounds = rounds;
+    }
+
+    public Set<ScoreEntry> getScoreEntries() {
+        return scoreEntries;
+    }
+
+    public void setScoreEntries(Set<ScoreEntry> scoreEntries) {
+        this.scoreEntries = scoreEntries;
+    }
+
 }

@@ -52,4 +52,9 @@ public class GameRoomController {
         }
         return ResponseEntity.ok(updatedRoom);
     }
+
+    @PostMapping("/{roomId}/players/{playerId}")
+    public ResponseEntity<GameRoom> joinPlayerToRoom(@PathVariable Long roomId, @PathVariable Long playerId) {
+        return ResponseEntity.ok(gameRoomService.joinPlayerToRoom(roomId, playerId));
+    }
 }

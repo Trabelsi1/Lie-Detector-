@@ -3,12 +3,14 @@ package n7.projet.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.server.ResponseStatusException;
 
 import n7.projet.entity.GameRoom;
 import n7.projet.entity.Player;
@@ -68,10 +71,18 @@ class GameRoomServiceTest {
 
     @Test
     void addUserToRoomShouldCreatePlayerAndLinkBothSides() {
+        AtomicReference<Player> savedPlayerRef = new AtomicReference<>();
+
         when(gameRoomRepository.findById(1L)).thenReturn(Optional.of(room));
         when(userRepository.findById(2L)).thenReturn(Optional.of(user));
         when(playerRepository.findByUserId(2L)).thenReturn(Optional.empty());
-        when(playerRepository.save(any(Player.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(playerRepository.save(any(Player.class))).thenAnswer(invocation -> {
+            Player savedPlayer = invocation.getArgument(0);
+            savedPlayer.setId(3L);
+            savedPlayerRef.set(savedPlayer);
+            return savedPlayer;
+        });
+        when(playerRepository.findById(3L)).thenAnswer(invocation -> Optional.of(savedPlayerRef.get()));
         when(gameRoomRepository.save(any(GameRoom.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         GameRoom updatedRoom = gameRoomService.addUserToRoom(1L, 2L);
@@ -95,5 +106,23 @@ class GameRoomServiceTest {
         GameRoom updatedRoom = gameRoomService.addUserToRoom(1L, 2L);
 
         assertNull(updatedRoom);
+    }
+
+    @Test
+    void joinPlayerToRoomShouldRejectFullRooms() {
+        room.setId(1L);
+        room.setMaxPlayers(1);
+
+        Player existingPlayer = new Player();
+        existingPlayer.setId(10L);
+        room.getPlayers().add(existingPlayer);
+
+        Player joiningPlayer = new Player();
+        joiningPlayer.setId(11L);
+
+        when(gameRoomRepository.findById(1L)).thenReturn(Optional.of(room));
+        when(playerRepository.findById(11L)).thenReturn(Optional.of(joiningPlayer));
+
+        assertThrows(ResponseStatusException.class, () -> gameRoomService.joinPlayerToRoom(1L, 11L));
     }
 }

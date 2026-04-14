@@ -23,6 +23,7 @@ public class Player {
     private Long id;
 
     @OneToOne
+    @JsonIgnoreProperties({ "player" })
     private User user;
 
     @OneToOne(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true)

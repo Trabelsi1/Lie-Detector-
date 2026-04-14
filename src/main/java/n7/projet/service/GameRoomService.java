@@ -4,7 +4,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import n7.projet.entity.GameRoom;
 import n7.projet.entity.Player;
@@ -43,6 +45,28 @@ public class GameRoomService {
         return gameRoomRepository.findById(id).orElse(null);
     }
 
+    public GameRoom joinPlayerToRoom(Long roomId, Long playerId) {
+        GameRoom room = gameRoomRepository.findById(roomId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found"));
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found"));
+
+        boolean alreadyInRoom = room.getPlayers().stream()
+                .anyMatch(existingPlayer -> playerId.equals(existingPlayer.getId()));
+        if (alreadyInRoom) {
+            return room;
+        }
+
+        if (room.getMaxPlayers() > 0 && room.getPlayers().size() >= room.getMaxPlayers()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Room is full");
+        }
+
+        room.getPlayers().add(player);
+        player.getRooms().add(room);
+
+        return gameRoomRepository.save(room);
+    }
+
     public GameRoom addUserToRoom(Long roomId, Long userId) {
         Optional<GameRoom> roomOptional = gameRoomRepository.findById(roomId);
         Optional<User> userOptional = userRepository.findById(userId);
@@ -51,14 +75,10 @@ public class GameRoomService {
             return null;
         }
 
-        GameRoom room = roomOptional.get();
         User user = userOptional.get();
         Player player = getOrCreatePlayer(user);
 
-        room.getPlayers().add(player);
-        player.getRooms().add(room);
-
-        return gameRoomRepository.save(room);
+        return joinPlayerToRoom(roomId, player.getId());
     }
 
     private Player getOrCreatePlayer(User user) {

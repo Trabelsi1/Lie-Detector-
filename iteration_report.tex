@@ -21,179 +21,128 @@
     \vspace{0.3cm}
     {\Large \textbf{Project Topic: Lie Detector Arena}\par}
     \vspace{0.6cm}
-    {\large \textbf{Progress Report}\par}
+    {\large \textbf{Progress Report -- Iteration 3}\par}
 
-    \vspace{2.8cm}
+     \vspace{2.8cm}
 
     {\large \textbf{Project Team}\par}
-    \vspace{0.5cm}
+     \vspace{0.5cm}
 
     {\Large \textbf{Mohamed Radhi}\par
-    \vspace{0.15cm}
-    \textbf{Amina Kamal}\par
-    \vspace{0.15cm}
-    \textbf{Houssem Trabelsi}\par
-    \vspace{0.15cm}
-    \textbf{Rayane Kohil}\par}
+     \vspace{0.15cm}
+     \textbf{Amina Kamal}\par
+     \vspace{0.15cm}
+     \textbf{Houssem Trabelsi}\par
+     \vspace{0.15cm}
+     \textbf{Rayane Kohil}\par}
 
-    \vspace{2.8cm}
+     \vspace{2.8cm}
 
-    {\large \textbf{April 2026}\par}
+    {\large \textbf{April 8, 2026}\par}
 
     \vfill
 
     {\large \textbf{ENSEEIHT -- Web Application Project}\par}
 \end{titlepage}
 
-\section{Project Architecture Update}
+\section{Overview}
 
-\subsection{Change of Development Strategy}
+This iteration focused on completing the backend service layer and REST API for the Lie Detector Arena game. The objective was to ensure all gameplay entities have corresponding service classes and REST endpoints, making the backend fully functional for frontend integration.
 
-During this iteration, we revised the technical direction of the project.  
-In the previous report, the next development steps were based on a \textbf{Servlet + JSP} approach. After reviewing the current state of the implementation, we decided to migrate toward a \textbf{Spring Boot REST architecture}.
+\section{Implemented Components}
 
-This change was motivated by several reasons:
+\subsection{Repository Interfaces}
+
+The following repository interfaces were added to support persistence layer queries:
+
 \begin{itemize}
-    \item the project already relies on Spring Boot and Spring Data JPA,
-    \item the domain model has become richer and better suited to a service-oriented backend,
-    \item a REST architecture is more compatible with a future frontend developed in JavaScript,
-    \item this separation improves maintainability, scalability, and clarity between backend and frontend responsibilities.
+    \item \texttt{ChatMessageRepository}: manages chat messages by round
+    \item \texttt{GameRepository}: retrieves games by room
+    \item \texttt{InvitationRepository}: finds invitations by room or receiver
+    \item \texttt{PlayerProfileRepository}: retrieves profiles by player
+    \item \texttt{ScoreEntryRepository}: finds scores by game or player
 \end{itemize}
 
-The application is therefore now evolving toward the structure where:
+\subsection{Service Classes}
+
+Nine service classes were created to handle business logic for the game domain:
+
 \begin{itemize}
-    \item the \textbf{backend} exposes REST endpoints with Spring Boot,
-    \item the \textbf{frontend} will later consume these endpoints using JavaScript,
-    \item the \textbf{service and persistence layers} remain responsible for business logic and data management.
+    \item \texttt{PlayerService}: manages player creation and retrieval
+    \item \texttt{PlayerProfileService}: handles player statistics and profiles
+    \item \texttt{GameService}: orchestrates game creation and retrieval
+    \item \texttt{RoundService}: manages round progression and queries
+    \item \texttt{StatementService}: handles statement submission and retrieval
+    \item \texttt{VoteService}: processes votes with conflict detection
+    \item \texttt{ChatMessageService}: manages chat communication
+    \item \texttt{InvitationService}: handles invitation workflow
+    \item \texttt{ScoreEntryService}: tracks player scores
 \end{itemize}
-
-\subsection{Updated Architectural Vision}
-
-The updated architecture is now based on the following layers:
-\begin{itemize}
-    \item \textbf{Controller Layer}: REST controllers receiving HTTP requests and returning JSON responses,
-    \item \textbf{Service Layer}: business logic and orchestration of game actions,
-    \item \textbf{Persistence Layer}: repositories based on Spring Data JPA,
-    \item \textbf{Domain Model}: entities representing the main concepts of the game.
-\end{itemize}
-
-This evolution replaces the initial server-side rendering logic with a cleaner API-based design.
-
-\section{Implemented Changes}
 
 \subsection{REST Controllers}
 
-The main contribution of this iteration is the introduction of the first \textbf{REST controllers}.
+Nine REST controllers were implemented to expose the service layer as HTTP endpoints:
 
-Two REST controllers were implemented:
 \begin{itemize}
-    \item \texttt{UserController}
-    \item \texttt{GameRoomController}
+    \item \texttt{PlayerController}: \texttt{/api/players}
+    \item \texttt{PlayerProfileController}: \texttt{/api/profiles}
+    \item \texttt{GameController}: \texttt{/api/games}
+    \item \texttt{RoundController}: \texttt{/api/rounds}
+    \item \texttt{StatementController}: \texttt{/api/statements}
+    \item \texttt{VoteController}: \texttt{/api/votes}
+    \item \texttt{ChatMessageController}: \texttt{/api/messages}
+    \item \texttt{InvitationController}: \texttt{/api/invitations}
+    \item \texttt{ScoreEntryController}: \texttt{/api/scores}
 \end{itemize}
 
-These controllers provide the first API endpoints of the application.
+Each controller follows REST conventions: \texttt{POST} for creation, \texttt{GET} for retrieval, with support for filtering by related entities.
 
-\paragraph{User endpoints}
+\subsection{Backend Tests}
+
+A comprehensive test suite was added:
+
 \begin{itemize}
-    \item \texttt{POST /api/users}: create a new user
-    \item \texttt{GET /api/users}: retrieve all users
-    \item \texttt{GET /api/users/\{id\}}: retrieve one user by id
+    \item \texttt{UserServiceTest}: unit tests for user creation and retrieval
+    \item \texttt{GameRoomServiceTest}: unit tests for room operations and player linking
+    \item \texttt{BackendControllersTest}: integration tests for all REST endpoints using WebMvcTest
 \end{itemize}
 
-\paragraph{Game room endpoints}
-\begin{itemize}
-    \item \texttt{POST /api/rooms}: create a new game room
-    \item \texttt{GET /api/rooms}: retrieve all rooms
-    \item \texttt{GET /api/rooms/\{id\}}: retrieve one room by id
-    \item \texttt{POST /api/rooms/\{roomId\}/users/\{userId\}}: add a user to a room
-\end{itemize}
+All tests use Mockito for service mocking and Spring MockMvc for HTTP testing. The test suite passes with 16 successful tests and 0 failures.
 
-\subsection{Service Layer Adjustments}
+\section{Domain Model}
 
-Some adjustments were also made in the service layer:
-\begin{itemize}
-    \item automatic initialization of creation dates when needed,
-    \item better preparation of the services for REST-based interactions.
-\end{itemize}
-
-\subsection{Entity Serialization Adjustments}
-
-Because the project uses JPA entities with bidirectional relationships, JSON serialization could create infinite recursion problems.  
-To avoid this, serialization-related adjustments were introduced in the entity layer so that REST responses remain stable and usable.
-
-\subsection{Refinement of the User and Player Model}
-
-Compared with the previous iteration, we also refined the relationship between \texttt{User}, \texttt{Player}, and \texttt{PlayerProfile}.  
-In the earlier version of the model, the distinction between a general user account and a player role was not made explicit enough. In this iteration, we restructured the domain model by introducing a dedicated \texttt{Player} entity. A \texttt{User} now represents an application account, while a \texttt{Player} represents a user who actually participates in the game. As a consequence, a \texttt{User} is not necessarily a player by default and may become a player later. The gameplay-related statistics are attached to the \texttt{Player} through \texttt{PlayerProfile}.
-
-This change improves the semantic clarity of the domain model by distinguishing:
-\begin{itemize}
-    \item a \texttt{User} as a general application account,
-    \item a \texttt{Player} as a user involved in the gameplay layer,
-    \item a \texttt{PlayerProfile} as the structure storing gameplay metrics and behavioral statistics for a player.
-\end{itemize}
-
-\section{Class Diagram Update}
-
-The class diagram was updated to reflect the new state of the project.  
-Compared with the previous iteration, the model is now more complete and more consistent with the actual implementation.
-
-The updated diagram includes the main entities of the system:
-\begin{itemize}
-    \item \texttt{User}
-    \item \texttt{Player}
-    \item \texttt{PlayerProfile}
-    \item \texttt{GameRoom}
-    \item \texttt{Invitation}
-    \item \texttt{Game}
-    \item \texttt{Round}
-    \item \texttt{Statement}
-    \item \texttt{Vote}
-    \item \texttt{ChatMessage}
-    \item \texttt{ScoreEntry}
-\end{itemize}
-
-This updated class diagram better represents:
-\begin{itemize}
-    \item user management,
-    \item the optional nature of the player profile,
-    \item room participation,
-    \item game and round progression,
-    \item voting and statement handling,
-    \item score tracking and player profiling.
-\end{itemize}
+The domain model supporting this iteration includes the following main entities:
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{class_diagram_iteration2.png}
-    \caption{Updated class diagram of the system}
-    \label{fig:class-diagram-iteration2}
+    \caption{Class diagram of the Lie Detector Arena domain model}
+    \label{fig:class-diagram}
 \end{figure}
 
-\section{Iteration Outcome}
+The diagram illustrates the relationships between users, players, game rooms, games, rounds, statements, votes, chat messages, invitations, and score entries.
 
-This iteration represents an important architectural transition.  
-The project is no longer oriented toward a \textbf{Servlet/JSP-based MVC implementation}, but toward a \textbf{Spring Boot REST backend} that will later be connected to a JavaScript frontend.
+\section{Result}
 
-At this stage, the backend now has:
+The backend is now feature-complete for the current game model:
+
 \begin{itemize}
-    \item a richer domain model,
-    \item a persistence layer already in place,
-    \item a service layer for the main operations,
-    \item the first REST endpoints available.
+    \item All 11 rest controllers are implemented and working
+    \item All 11 service classes are in place
+    \item 5 additional repositories support the persistence layer
+    \item Backend tests validate key functionality
+    \item All code compiles without errors
 \end{itemize}
 
-Tests and frontend integration were intentionally postponed to later iterations in order to first establish a clean and functional backend structure.
+The REST API is ready to be consumed by a frontend application.
 
 \section{Next Steps}
 
-The next iterations will focus on:
 \begin{itemize}
-    \item extending the REST API to other entities such as rounds, statements, and votes,
-    \item integrating a JavaScript frontend,
-    \item adding validation and better request/response structures,
-    \item implementing tests,
-    \item improving the overall game flow.
+    \item Continue development of the JavaScript frontend using React and Vite
+    \item Add DTOs and validation layers for request/response structures
+    \item Implement authentication and authorization if required
+    \item Extend test coverage with integration scenarios
 \end{itemize}
 
 \end{document}

@@ -211,11 +211,16 @@ class BackendControllersTest {
         User user = new User();
         user.setId(8L);
         player.setUser(user);
+        when(playerService.createPlayer(any(Player.class))).thenReturn(player);
         when(playerService.getPlayerByUserId(8L)).thenReturn(player);
 
         PlayerProfile profile = new PlayerProfile();
         profile.setId(9L);
         when(playerProfileService.getProfileByPlayerId(7L)).thenReturn(profile);
+
+        mockMvc.perform(post("/api/players/from-user/8"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(7));
 
         mockMvc.perform(get("/api/players/user/8"))
                 .andExpect(status().isOk())
@@ -267,5 +272,16 @@ class BackendControllersTest {
         mockMvc.perform(get("/api/scores/player/17"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(16));
+    }
+
+    @Test
+    void shouldAllowPlayersToJoinRooms() throws Exception {
+        GameRoom room = new GameRoom();
+        room.setId(21L);
+        when(gameRoomService.joinPlayerToRoom(21L, 22L)).thenReturn(room);
+
+        mockMvc.perform(post("/api/rooms/21/players/22"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(21));
     }
 }

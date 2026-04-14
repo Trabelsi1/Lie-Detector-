@@ -34,9 +34,6 @@ public class VoteController {
     public ResponseEntity<Vote> createVote(@PathVariable Long roundId, @PathVariable Long voterId,
             @PathVariable Long statementId) {
         Vote createdVote = voteService.createVote(roundId, voterId, statementId);
-        if (createdVote == null) {
-            return ResponseEntity.badRequest().build();
-        }
         return ResponseEntity.status(HttpStatus.CREATED).body(createdVote);
     }
 
@@ -52,6 +49,11 @@ public class VoteController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(vote);
+    }
+
+    @GetMapping("/round/{roundId}")
+    public List<Vote> getVotesByRoundId(@PathVariable Long roundId) {
+        return voteService.getVotesByRoundId(roundId);
     }
 
     @GetMapping("/round/{roundId}/statement/{statementId}/count")

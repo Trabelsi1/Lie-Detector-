@@ -2,6 +2,7 @@ package n7.projet.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -15,6 +16,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import n7.projet.entity.User;
 import n7.projet.repository.UserRepository;
@@ -39,6 +42,8 @@ class UserServiceTest {
 
     @Test
     void createUserShouldSetCreatedAtWhenMissing() {
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("alice@example.com")).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         User createdUser = userService.createUser(user);
@@ -58,5 +63,47 @@ class UserServiceTest {
 
         assertNotNull(foundUser);
         assertEquals(1L, foundUser.getId());
+    }
+
+    @Test
+    void createUserShouldRejectNonAlphanumericUsername() {
+        user.setUsername("alice_01");
+
+        assertThrows(ResponseStatusException.class, () -> userService.createUser(user));
+    }
+
+    @Test
+    void createUserShouldRejectInvalidEmailFormat() {
+        user.setEmail("alice@example");
+
+        assertThrows(ResponseStatusException.class, () -> userService.createUser(user));
+    }
+
+    @Test
+    void createUserShouldRejectSameUsernameAndEmail() {
+        User existingUser = new User();
+        existingUser.setUsername("alice");
+        existingUser.setEmail("alice@example.com");
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(existingUser));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> userService.createUser(user));
+
+        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+        assertEquals("User already exists with the same username and email", exception.getReason());
+    }
+
+    @Test
+    void createUserShouldRejectExistingUsernameWithDifferentEmail() {
+        User existingUser = new User();
+        existingUser.setUsername("alice");
+        existingUser.setEmail("other@example.com");
+        when(userRepository.findByUsername("alice")).thenReturn(Optional.of(existingUser));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> userService.createUser(user));
+
+        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+        assertEquals("Username already exists, please choose another username", exception.getReason());
     }
 }
