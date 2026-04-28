@@ -10,4 +10,6 @@ public interface ScoreEntryRepository extends JpaRepository<ScoreEntry, Long> {
     List<ScoreEntry> findByGameId(Long gameId);
 
     List<ScoreEntry> findByPlayerId(Long playerId);
+
+    java.util.Optional<ScoreEntry> findByGameIdAndPlayerId(Long gameId, Long playerId);
 }

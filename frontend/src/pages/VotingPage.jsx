@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getRoundById, advancePhase } from '../services/roundsApi'
+import { getRoundById, advancePhase, getVotingStatus } from '../services/roundsApi'
 import { getStatementsByRoundId } from '../services/statementsApi'
 import { createVote, hasPlayerVoted } from '../services/votesApi'
 
@@ -14,13 +14,35 @@ export default function VotingPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [votingStatus, setVotingStatus] = useState({ requiredVotes: 0, submittedVotes: 0, complete: false })
 
-  const [currentPlayerId] = useState(Number(localStorage.getItem('currentPlayerId')) || null)
+  const [currentPlayerId] = useState(
+    Number(sessionStorage.getItem('currentPlayerId') || localStorage.getItem('currentPlayerId')) || null,
+  )
   const [hasVoted, setHasVoted] = useState(false)
 
   useEffect(() => {
     loadRoundData()
   }, [roundId])
+
+  useEffect(() => {
+    const intervalId = setInterval(async () => {
+      try {
+        const latestRound = await getRoundById(roundId)
+        if (!latestRound) return
+
+        setRound(latestRound)
+
+        if (latestRound.phase === 'RESULTS') {
+          navigate(`/game/${gameId}/results/${roundId}`)
+        }
+      } catch {
+        // keep polling silently; page-level error handling is already in loadRoundData.
+      }
+    }, 2000)
+
+    return () => clearInterval(intervalId)
+  }, [gameId, roundId, navigate])
 
   async function loadRoundData() {
     try {
@@ -31,13 +53,16 @@ export default function VotingPage() {
       const stmts = await getStatementsByRoundId(roundId)
       setStatements(stmts)
 
+      const status = await getVotingStatus(roundId)
+      setVotingStatus(status)
+
       // Check if current player has already voted
       if (currentPlayerId) {
         const voted = await hasPlayerVoted(roundId, currentPlayerId)
         setHasVoted(voted)
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load round data')
+      setError(err.message || 'Failed to load round data')
     } finally {
       setLoading(false)
     }
@@ -54,9 +79,11 @@ export default function VotingPage() {
       setSuccess('Vote cast successfully!')
       setSelectedStatementId(statementId)
       setHasVoted(true)
+      const status = await getVotingStatus(roundId)
+      setVotingStatus(status)
       setError('')
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to cast vote')
+      setError(err.message || 'Failed to cast vote')
     }
   }
 
@@ -66,7 +93,7 @@ export default function VotingPage() {
       setRound(updatedRound)
       navigate(`/game/${gameId}/results/${roundId}`)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to advance phase')
+      setError(err.message || 'Failed to advance phase')
     }
   }
 
@@ -109,6 +136,10 @@ export default function VotingPage() {
               <p>Which statement is the lie?</p>
             )}
 
+            <p style={{ marginTop: '8px' }}>
+              Votes submitted: {votingStatus.submittedVotes}/{votingStatus.requiredVotes}
+            </p>
+
             {statements.length > 0 ? (
               <div style={{ marginTop: '20px' }}>
                 {statements.map((stmt, index) => (
@@ -139,11 +170,11 @@ export default function VotingPage() {
             )}
           </div>
 
-          <button onClick={handleAdvanceToResults} className="primary-button">
+          <button onClick={handleAdvanceToResults} className="primary-button" disabled={!votingStatus.complete}>
             All Votes In - Show Results
           </button>
 
-          <button onClick={() => navigate(`/game/${gameId}/lobby/${gameId}`)}>Back to Lobby</button>
+          <button onClick={() => navigate(`/game/${gameId}/lobby`)}>Back to Lobby</button>
         </>
       )}
     </div>

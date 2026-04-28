@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -21,6 +22,8 @@ public class Round {
 
     private int roundNumber;
     private String phase;
+
+    @Column(name = "speaker_id")
     private Long speakerId;
     private LocalDateTime startedAt;
     private LocalDateTime endedAt;

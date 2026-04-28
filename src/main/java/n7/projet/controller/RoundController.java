@@ -76,4 +76,9 @@ public class RoundController {
         boolean canVote = !playerId.equals(round.getSpeakerId()) && roundService.isInVotingPhase(roundId);
         return ResponseEntity.ok(canVote);
     }
+
+    @GetMapping("/{roundId}/voting-status")
+    public ResponseEntity<RoundService.VotingStatus> getVotingStatus(@PathVariable Long roundId) {
+        return ResponseEntity.ok(roundService.getVotingStatus(roundId));
+    }
 }

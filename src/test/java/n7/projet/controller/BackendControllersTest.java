@@ -32,6 +32,7 @@ import n7.projet.entity.Statement;
 import n7.projet.entity.User;
 import n7.projet.entity.Vote;
 import n7.projet.service.ChatMessageService;
+import n7.projet.service.GameAwardsService;
 import n7.projet.service.GameRoomService;
 import n7.projet.service.GameService;
 import n7.projet.service.InvitationService;
@@ -60,6 +61,9 @@ class BackendControllersTest {
 
     @Autowired
     private GameService gameService;
+
+    @Autowired
+    private GameAwardsService gameAwardsService;
 
     @Autowired
     private RoundService roundService;
@@ -101,6 +105,11 @@ class BackendControllersTest {
         @Bean
         GameService gameService() {
             return mock(GameService.class);
+        }
+
+        @Bean
+        GameAwardsService gameAwardsService() {
+            return mock(GameAwardsService.class);
         }
 
         @Bean

@@ -13,7 +13,9 @@ function PlayersPage() {
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [form, setForm] = useState(initialForm)
-  const [selectedPlayerId, setSelectedPlayerId] = useState(localStorage.getItem('currentPlayerId') || null)
+  const [selectedPlayerId, setSelectedPlayerId] = useState(
+    sessionStorage.getItem('currentPlayerId') || localStorage.getItem('currentPlayerId') || null,
+  )
 
   async function loadPlayers() {
     try {
@@ -57,7 +59,8 @@ function PlayersPage() {
       setForm(initialForm)
       setMessage('Player created')
       setSelectedPlayerId(newPlayer.id)
-      localStorage.setItem('currentPlayerId', newPlayer.id)
+      sessionStorage.setItem('currentPlayerId', String(newPlayer.id))
+      localStorage.removeItem('currentPlayerId')
       await loadPlayers()
     } catch (apiError) {
       setError(apiError.message || 'Failed to create player')
@@ -66,7 +69,8 @@ function PlayersPage() {
 
   function handleSelectAsMe(playerId) {
     setSelectedPlayerId(playerId)
-    localStorage.setItem('currentPlayerId', playerId)
+    sessionStorage.setItem('currentPlayerId', String(playerId))
+    localStorage.removeItem('currentPlayerId')
     setMessage(`You are now player #${playerId}`)
   }
 

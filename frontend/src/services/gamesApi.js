@@ -29,3 +29,23 @@ export async function getCurrentRound(gameId) {
   const { data } = await apiClient.get(`/games/${gameId}/current-round`)
   return data
 }
+
+export async function allSpeakersDone(gameId) {
+  const { data } = await apiClient.get(`/games/${gameId}/all-speakers-done`)
+  return data
+}
+
+export async function getSpeakerProgress(gameId) {
+  const { data } = await apiClient.get(`/games/${gameId}/speaker-progress`)
+  return data
+}
+
+export async function getFinalRankings(gameId) {
+  const { data } = await apiClient.get(`/games/${gameId}/final-rankings`)
+  return data
+}
+
+export async function getFinalSummary(gameId) {
+  const { data } = await apiClient.get(`/games/${gameId}/final-summary`)
+  return data
+}

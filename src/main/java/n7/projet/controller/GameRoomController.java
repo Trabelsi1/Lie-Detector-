@@ -44,6 +44,23 @@ public class GameRoomController {
         return ResponseEntity.ok(room);
     }
 
+    @GetMapping("/{id}/players")
+    public ResponseEntity<List<RoomPlayerSummary>> getRoomPlayers(@PathVariable Long id) {
+        GameRoom room = gameRoomService.getRoomById(id);
+        if (room == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<RoomPlayerSummary> players = room.getPlayers().stream()
+                .filter(player -> player != null && player.getId() != null)
+                .map(player -> new RoomPlayerSummary(
+                        player.getId(),
+                        player.getUser() != null ? player.getUser().getUsername() : "Unknown"))
+                .toList();
+
+        return ResponseEntity.ok(players);
+    }
+
     @PostMapping("/{roomId}/users/{userId}")
     public ResponseEntity<GameRoom> addUserToRoom(@PathVariable Long roomId, @PathVariable Long userId) {
         GameRoom updatedRoom = gameRoomService.addUserToRoom(roomId, userId);
@@ -56,5 +73,8 @@ public class GameRoomController {
     @PostMapping("/{roomId}/players/{playerId}")
     public ResponseEntity<GameRoom> joinPlayerToRoom(@PathVariable Long roomId, @PathVariable Long playerId) {
         return ResponseEntity.ok(gameRoomService.joinPlayerToRoom(roomId, playerId));
+    }
+
+    public record RoomPlayerSummary(Long id, String username) {
     }
 }

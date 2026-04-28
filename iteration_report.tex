@@ -38,7 +38,7 @@
 
      \vspace{2.8cm}
 
-    {\large \textbf{April 8, 2026}\par}
+    {\large \textbf{April 28, 2026}\par}
 
     \vfill
 
@@ -47,13 +47,13 @@
 
 \section{Overview}
 
-This iteration focused on completing the backend service layer and REST API for the Lie Detector Arena game. The objective was to ensure all gameplay entities have corresponding service classes and REST endpoints, making the backend fully functional for frontend integration.
+This iteration focused on finishing remaining backend features, stabilizing game-cycle logic, and integrating final-game awards and lifetime profile updates. The goal was to clear schema migration issues, ensure tests pass, and expose endpoints the frontend needs to render final results and awards.
 
-\section{Implemented Components}
+\section{Implemented Components and Recent Changes}
 
 \subsection{Repository Interfaces}
 
-The following repository interfaces were added to support persistence layer queries:
+The repository interfaces support persistence layer queries and were extended where needed:
 
 \begin{itemize}
     \item \texttt{ChatMessageRepository}: manages chat messages by round
@@ -65,53 +65,39 @@ The following repository interfaces were added to support persistence layer quer
 
 \subsection{Service Classes}
 
-Nine service classes were created to handle business logic for the game domain:
+Core service classes handle business logic for the game domain; notable additions and changes in this iteration include:
 
 \begin{itemize}
-    \item \texttt{PlayerService}: manages player creation and retrieval
-    \item \texttt{PlayerProfileService}: handles player statistics and profiles
-    \item \texttt{GameService}: orchestrates game creation and retrieval
-    \item \texttt{RoundService}: manages round progression and queries
-    \item \texttt{StatementService}: handles statement submission and retrieval
-    \item \texttt{VoteService}: processes votes with conflict detection
-    \item \texttt{ChatMessageService}: manages chat communication
-    \item \texttt{InvitationService}: handles invitation workflow
-    \item \texttt{ScoreEntryService}: tracks player scores
+    \item \texttt{GameAwardsService}: computes per-game awards and applies lifetime profile updates (one-time) when a game completes
+    \item Cycle-aware enhancements to \texttt{RoundService} and \texttt{GameService} to support multi-cycle speaker rotation and auto-progression
+    \item Defensive updates across services to handle empty collections and reduce fragility when the HSQL file is locked by OneDrive
 \end{itemize}
 
 \subsection{REST Controllers}
 
-Nine REST controllers were implemented to expose the service layer as HTTP endpoints:
+REST controllers expose service functionality. This iteration added or updated endpoints used by the frontend (examples):
 
 \begin{itemize}
-    \item \texttt{PlayerController}: \texttt{/api/players}
-    \item \texttt{PlayerProfileController}: \texttt{/api/profiles}
-    \item \texttt{GameController}: \texttt{/api/games}
-    \item \texttt{RoundController}: \texttt{/api/rounds}
-    \item \texttt{StatementController}: \texttt{/api/statements}
-    \item \texttt{VoteController}: \texttt{/api/votes}
-    \item \texttt{ChatMessageController}: \texttt{/api/messages}
-    \item \texttt{InvitationController}: \texttt{/api/invitations}
-    \item \texttt{ScoreEntryController}: \texttt{/api/scores}
+    \item \texttt{GameController}: now exposes \texttt{/api/games}, \texttt{/api/games/{id}/speaker-progress}, and \texttt{/api/games/{id}/final-summary}
+    \item \texttt{GameRoomController}: \texttt{/rooms/{id}/players} returns room player summaries to avoid fragile nested graph serialization
 \end{itemize}
 
 Each controller follows REST conventions: \texttt{POST} for creation, \texttt{GET} for retrieval, with support for filtering by related entities.
 
-\subsection{Backend Tests}
+\subsection{Backend Tests and Status}
 
-A comprehensive test suite was added:
+The test suite covers unit and slice tests; important outcomes from this iteration:
 
 \begin{itemize}
-    \item \texttt{UserServiceTest}: unit tests for user creation and retrieval
-    \item \texttt{GameRoomServiceTest}: unit tests for room operations and player linking
-    \item \texttt{BackendControllersTest}: integration tests for all REST endpoints using WebMvcTest
+    \item Unit tests: \texttt{UserServiceTest}, \texttt{GameRoomServiceTest}, and others were maintained and extended
+    \item Controller slice tests: \texttt{BackendControllersTest} uses mocked beans via a test configuration; recent mocks were added for new dependencies such as \texttt{GameAwardsService}
 \end{itemize}
 
-All tests use Mockito for service mocking and Spring MockMvc for HTTP testing. The test suite passes with 16 successful tests and 0 failures.
+All tests use Mockito for service mocking and Spring MockMvc for HTTP testing. After addressing an HSQLDB migration issue (see below), the backend test run completed successfully (local run: 18 tests, BUILD SUCCESS).
 
 \section{Domain Model}
 
-The domain model supporting this iteration includes the following main entities:
+The domain model supporting this iteration includes the main entities: users, players, player profiles, game rooms, games, rounds, statements, votes, chat messages, invitations, and score entries.
 
 \begin{figure}[H]
     \centering
@@ -120,29 +106,42 @@ The domain model supporting this iteration includes the following main entities:
     \label{fig:class-diagram}
 \end{figure}
 
-The diagram illustrates the relationships between users, players, game rooms, games, rounds, statements, votes, chat messages, invitations, and score entries.
-
 \section{Result}
 
-The backend is now feature-complete for the current game model:
+The backend is now feature-complete for the current game model and includes the following key updates:
 
 \begin{itemize}
-    \item All 11 rest controllers are implemented and working
-    \item All 11 service classes are in place
-    \item 5 additional repositories support the persistence layer
-    \item Backend tests validate key functionality
-    \item All code compiles without errors
+    \item All main REST controllers and services are implemented and wired
+    \item \texttt{GameAwardsService} computes final-game awards and applies profile lifetime stats exactly once per completed game
+    \item Cycle configuration (default 2, max 10) added to the game creation flow (frontend and backend)
+    \item Migration fix applied so HSQLDB schema updates succeed for newly added non-null fields
+    \item Backend tests run clean locally after fixes
 \end{itemize}
 
-The REST API is ready to be consumed by a frontend application.
+The REST API is ready for the frontend to consume final-summary data and awards.
+
+\section{Notable Changes and Fixes}
+
+\begin{itemize}
+    \item \textbf{Cycle and UX:} Results page auto-cycle countdown implemented (UX preference: 3s with visible countdown; earlier local test used 5s)
+    \item \textbf{Cycle configuration:} Game creation UI accepts a \texttt{cycles} parameter (default 2, max 10) and backend persists \texttt{targetCycles}
+    \item \textbf{Final awards:} \texttt{GameAwardsService} computes awards, applies tie-break logic (better liar wins; equal liar quality => tie), and updates lifetime metrics (`gamesPlayed`, `gamesWon`, `gamesLost`) in \texttt{PlayerProfile}
+    \item \textbf{Migration fix:} HSQLDB required an explicit default for new non-null columns. The following change was applied to \texttt{PlayerProfile} to avoid alter-table errors:
+    \begin{verbatim}
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private int totalLosses;
+    \end{verbatim}
+    This prevents the "default expression needed" error during schema update.
+    \item \textbf{Tests:} \texttt{BackendControllersTest} test config was adjusted to mock \texttt{GameAwardsService}; backend tests passed after fixes.
+\end{itemize}
 
 \section{Next Steps}
 
 \begin{itemize}
-    \item Continue development of the JavaScript frontend using React and Vite
-    \item Add DTOs and validation layers for request/response structures
-    \item Implement authentication and authorization if required
-    \item Extend test coverage with integration scenarios
+    \item Verify the \texttt{final-summary} endpoint end-to-end with a completed game and confirm awards rendering in the Results UI (frontend)
+    \item Add integration tests that exercise full game completion and ensure lifetime profile updates are idempotent
+    \item Polish final awards UX (countdown timing, animation, tie-break presentation) and merge frontend changes
+    \item Add DTO-level validation and consider authentication/authorization for production deployment
 \end{itemize}
 
 \end{document}

@@ -18,11 +18,36 @@ export default function StatementSubmissionPage() {
     isLie: false,
   })
 
-  const [currentPlayerId] = useState(Number(localStorage.getItem('currentPlayerId')) || null)
+  const [currentPlayerId] = useState(
+    Number(sessionStorage.getItem('currentPlayerId') || localStorage.getItem('currentPlayerId')) || null,
+  )
 
   useEffect(() => {
     loadRoundData()
   }, [roundId])
+
+  useEffect(() => {
+    const intervalId = setInterval(async () => {
+      try {
+        const latestRound = await getRoundById(roundId)
+        if (!latestRound) return
+
+        setRound(latestRound)
+
+        if (latestRound.phase === 'DISCUSSION') {
+          navigate(`/game/${gameId}/discussion/${roundId}`)
+        } else if (latestRound.phase === 'VOTING') {
+          navigate(`/game/${gameId}/voting/${roundId}`)
+        } else if (latestRound.phase === 'RESULTS') {
+          navigate(`/game/${gameId}/results/${roundId}`)
+        }
+      } catch {
+        // keep polling silently
+      }
+    }, 2000)
+
+    return () => clearInterval(intervalId)
+  }, [gameId, roundId, navigate])
 
   async function loadRoundData() {
     try {
@@ -42,7 +67,7 @@ export default function StatementSubmissionPage() {
       const stmts = await getStatementsByRoundId(roundId)
       setStatements(stmts)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load round data')
+      setError(err.message || 'Failed to load round data')
     } finally {
       setLoading(false)
     }
@@ -71,7 +96,7 @@ export default function StatementSubmissionPage() {
       })
       setError('')
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to add statement')
+      setError(err.message || 'Failed to add statement')
     }
   }
 
@@ -86,7 +111,7 @@ export default function StatementSubmissionPage() {
       setRound(updatedRound)
       navigate(`/game/${gameId}/discussion/${roundId}`)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to advance phase')
+      setError(err.message || 'Failed to advance phase')
     }
   }
 
@@ -174,11 +199,7 @@ export default function StatementSubmissionPage() {
             </button>
           )}
 
-          {!isAllowedToSubmit && statements.length === 3 && (
-            <button onClick={() => navigate(`/game/${gameId}/discussion/${roundId}`)}>
-              Go to Discussion
-            </button>
-          )}
+          <button onClick={() => navigate(`/game/${gameId}/lobby`)}>Back to Lobby</button>
         </>
       )}
     </div>

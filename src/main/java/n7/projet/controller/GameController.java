@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import n7.projet.entity.Game;
 import n7.projet.entity.Round;
+import n7.projet.service.GameAwardsService;
 import n7.projet.service.GameService;
 
 @RestController
@@ -20,9 +21,11 @@ import n7.projet.service.GameService;
 public class GameController {
 
     private final GameService gameService;
+    private final GameAwardsService gameAwardsService;
 
-    public GameController(GameService gameService) {
+    public GameController(GameService gameService, GameAwardsService gameAwardsService) {
         this.gameService = gameService;
+        this.gameAwardsService = gameAwardsService;
     }
 
     @PostMapping
@@ -63,5 +66,27 @@ public class GameController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(round);
+    }
+
+    @GetMapping("/{gameId}/all-speakers-done")
+    public ResponseEntity<Boolean> allSpeakersDone(@PathVariable Long gameId) {
+        boolean done = gameService.allPlayersSpeakingDone(gameId);
+        return ResponseEntity.ok(done);
+    }
+
+    @GetMapping("/{gameId}/speaker-progress")
+    public ResponseEntity<GameService.SpeakerProgress> getSpeakerProgress(@PathVariable Long gameId) {
+        return ResponseEntity.ok(gameService.getSpeakerProgress(gameId));
+    }
+
+    @GetMapping("/{gameId}/final-rankings")
+    public ResponseEntity<List<GameService.PlayerScore>> getFinalRankings(@PathVariable Long gameId) {
+        List<GameService.PlayerScore> rankings = gameService.getFinalRankings(gameId);
+        return ResponseEntity.ok(rankings);
+    }
+
+    @GetMapping("/{gameId}/final-summary")
+    public ResponseEntity<GameAwardsService.FinalSummary> getFinalSummary(@PathVariable Long gameId) {
+        return ResponseEntity.ok(gameAwardsService.getFinalSummary(gameId));
     }
 }

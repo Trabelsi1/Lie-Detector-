@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 
@@ -21,6 +22,8 @@ public class PlayerProfile {
     private String archetype;
     private int totalGames;
     private int totalWins;
+    @Column(nullable = false, columnDefinition = "integer default 0")
+    private int totalLosses;
     private int totalPlayersFooled;
 
     @OneToOne(optional = false)
@@ -31,12 +34,13 @@ public class PlayerProfile {
     }
 
     public PlayerProfile(double deceptionRate, double detectionRate, String archetype, int totalGames, int totalWins,
-            int totalPlayersFooled) {
+            int totalLosses, int totalPlayersFooled) {
         this.deceptionRate = deceptionRate;
         this.detectionRate = detectionRate;
         this.archetype = archetype;
         this.totalGames = totalGames;
         this.totalWins = totalWins;
+        this.totalLosses = totalLosses;
         this.totalPlayersFooled = totalPlayersFooled;
     }
 
@@ -86,6 +90,14 @@ public class PlayerProfile {
 
     public void setTotalWins(int totalWins) {
         this.totalWins = totalWins;
+    }
+
+    public int getTotalLosses() {
+        return totalLosses;
+    }
+
+    public void setTotalLosses(int totalLosses) {
+        this.totalLosses = totalLosses;
     }
 
     public int getTotalPlayersFooled() {

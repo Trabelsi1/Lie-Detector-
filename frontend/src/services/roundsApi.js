@@ -24,3 +24,8 @@ export async function canPlayerVote(roundId, playerId) {
   const { data } = await apiClient.get(`/rounds/${roundId}/can-vote/${playerId}`)
   return data
 }
+
+export async function getVotingStatus(roundId) {
+  const { data } = await apiClient.get(`/rounds/${roundId}/voting-status`)
+  return data
+}

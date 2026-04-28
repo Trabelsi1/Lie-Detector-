@@ -25,27 +25,39 @@ public class StatementController {
     }
 
     @PostMapping
-    public ResponseEntity<Statement> createStatement(@RequestBody Statement statement) {
+    public ResponseEntity<StatementResponse> createStatement(@RequestBody Statement statement) {
         Statement createdStatement = statementService.createStatement(statement);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdStatement);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(createdStatement));
     }
 
     @GetMapping
-    public List<Statement> getAllStatements() {
-        return statementService.getAllStatements();
+    public List<StatementResponse> getAllStatements() {
+        return statementService.getAllStatements().stream().map(this::toResponse).toList();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Statement> getStatementById(@PathVariable Long id) {
+    public ResponseEntity<StatementResponse> getStatementById(@PathVariable Long id) {
         Statement statement = statementService.getStatementById(id);
         if (statement == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(statement);
+        return ResponseEntity.ok(toResponse(statement));
     }
 
     @GetMapping("/round/{roundId}")
-    public List<Statement> getStatementsByRoundId(@PathVariable Long roundId) {
-        return statementService.getStatementsByRoundId(roundId);
+    public List<StatementResponse> getStatementsByRoundId(@PathVariable Long roundId) {
+        return statementService.getStatementsByRoundId(roundId).stream().map(this::toResponse).toList();
+    }
+
+    private StatementResponse toResponse(Statement statement) {
+        boolean revealLie = statement.getRound() != null && "RESULTS".equals(statement.getRound().getPhase());
+        return new StatementResponse(
+                statement.getId(),
+                statement.getContent(),
+                statement.getPosition(),
+                revealLie ? statement.isLie() : null);
+    }
+
+    public record StatementResponse(Long id, String content, int position, Boolean isLie) {
     }
 }

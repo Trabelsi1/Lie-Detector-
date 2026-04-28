@@ -1,7 +1,9 @@
 package n7.projet.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -13,6 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.OneToMany;
 
 @Entity
@@ -30,7 +33,8 @@ public class GameRoom {
 
     @ManyToMany
     @JoinTable(name = "game_room_players", joinColumns = @JoinColumn(name = "room_id"), inverseJoinColumns = @JoinColumn(name = "player_id"))
-    private Set<Player> players = new HashSet<>();
+    @OrderColumn(name = "player_order")
+    private List<Player> players = new ArrayList<>();
 
     @OneToMany(mappedBy = "gameRoom")
     private Set<Game> games = new HashSet<>();
@@ -87,11 +91,11 @@ public class GameRoom {
         this.createdAt = createdAt;
     }
 
-    public Set<Player> getPlayers() {
+    public List<Player> getPlayers() {
         return players;
     }
 
-    public void setPlayers(Set<Player> players) {
+    public void setPlayers(List<Player> players) {
         this.players = players;
     }
 
@@ -101,5 +105,13 @@ public class GameRoom {
 
     public void setGames(Set<Game> games) {
         this.games = games;
+    }
+
+    public Set<Invitation> getInvitations() {
+        return invitations;
+    }
+
+    public void setInvitations(Set<Invitation> invitations) {
+        this.invitations = invitations;
     }
 }

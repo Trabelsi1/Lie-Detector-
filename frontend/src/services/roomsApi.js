@@ -10,6 +10,11 @@ export async function getRoomById(roomId) {
   return data
 }
 
+export async function getRoomPlayers(roomId) {
+  const { data } = await apiClient.get(`/rooms/${roomId}/players`)
+  return data
+}
+
 export async function createRoom(payload) {
   const { data } = await apiClient.post('/rooms', payload)
   return data

@@ -8,7 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -50,7 +50,7 @@ class GameRoomServiceTest {
         room = new GameRoom();
         room.setRoomCode("ROOM-1");
         room.setStatus("OPEN");
-        room.setPlayers(new HashSet<>());
+        room.setPlayers(new ArrayList<>());
 
         user = new User();
         user.setId(2L);

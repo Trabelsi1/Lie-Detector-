@@ -1,6 +1,7 @@
 package n7.projet.controller;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,27 +26,44 @@ public class ChatMessageController {
     }
 
     @PostMapping
-    public ResponseEntity<ChatMessage> createMessage(@RequestBody ChatMessage message) {
+    public ResponseEntity<ChatMessageResponse> createMessage(@RequestBody ChatMessage message) {
         ChatMessage createdMessage = chatMessageService.createMessage(message);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdMessage);
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(createdMessage));
     }
 
     @GetMapping
-    public List<ChatMessage> getAllMessages() {
-        return chatMessageService.getAllMessages();
+    public List<ChatMessageResponse> getAllMessages() {
+        return chatMessageService.getAllMessages().stream().map(this::toResponse).toList();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ChatMessage> getMessageById(@PathVariable Long id) {
+    public ResponseEntity<ChatMessageResponse> getMessageById(@PathVariable Long id) {
         ChatMessage message = chatMessageService.getMessageById(id);
         if (message == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(message);
+        return ResponseEntity.ok(toResponse(message));
     }
 
     @GetMapping("/round/{roundId}")
-    public List<ChatMessage> getMessagesByRoundId(@PathVariable Long roundId) {
-        return chatMessageService.getMessagesByRoundId(roundId);
+    public List<ChatMessageResponse> getMessagesByRoundId(@PathVariable Long roundId) {
+        return chatMessageService.getMessagesByRoundId(roundId).stream().map(this::toResponse).toList();
+    }
+
+    private ChatMessageResponse toResponse(ChatMessage message) {
+        String senderName = null;
+        Long senderId = null;
+        if (message.getSender() != null) {
+            senderId = message.getSender().getId();
+        }
+        return new ChatMessageResponse(
+                message.getId(),
+                message.getContent(),
+                message.getSentAt(),
+                senderId,
+                senderName);
+    }
+
+    public record ChatMessageResponse(Long id, String content, LocalDateTime sentAt, Long senderId, String senderName) {
     }
 }

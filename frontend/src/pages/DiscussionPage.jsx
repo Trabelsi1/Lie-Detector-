@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getRoundById, advancePhase } from '../services/roundsApi'
 import { getStatementsByRoundId } from '../services/statementsApi'
+import { getMessagesByRoundId, createMessage } from '../services/messagesApi'
 
 export default function DiscussionPage() {
   const { gameId, roundId } = useParams()
@@ -9,14 +10,44 @@ export default function DiscussionPage() {
 
   const [round, setRound] = useState(null)
   const [statements, setStatements] = useState([])
+  const [messages, setMessages] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  const [discussionTime, setDiscussionTime] = useState(5) // 5 minutes default
+  const [messageContent, setMessageContent] = useState('')
+
+  const [currentPlayerId] = useState(
+    Number(sessionStorage.getItem('currentPlayerId') || localStorage.getItem('currentPlayerId')) || null,
+  )
 
   useEffect(() => {
     loadRoundData()
   }, [roundId])
+
+  useEffect(() => {
+    const intervalId = setInterval(async () => {
+      try {
+        const latestRound = await getRoundById(roundId)
+        if (!latestRound) return
+
+        setRound(latestRound)
+
+        // Refresh messages periodically
+        const msg = await getMessagesByRoundId(roundId)
+        setMessages(msg)
+
+        if (latestRound.phase === 'VOTING') {
+          navigate(`/game/${gameId}/voting/${roundId}`)
+        } else if (latestRound.phase === 'RESULTS') {
+          navigate(`/game/${gameId}/results/${roundId}`)
+        }
+      } catch {
+        // keep polling silently
+      }
+    }, 2000)
+
+    return () => clearInterval(intervalId)
+  }, [gameId, roundId, navigate])
 
   async function loadRoundData() {
     try {
@@ -25,11 +56,41 @@ export default function DiscussionPage() {
       setRound(roundData)
 
       const stmts = await getStatementsByRoundId(roundId)
-      setStatements(stmts)
+      setStatements(Array.isArray(stmts) ? stmts.filter(Boolean) : [])
+
+      const msgs = await getMessagesByRoundId(roundId)
+      setMessages(Array.isArray(msgs) ? msgs.filter(Boolean) : [])
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load round data')
+      setError(err.message || 'Failed to load round data')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleSendMessage(e) {
+    e.preventDefault()
+    try {
+      if (!messageContent.trim()) {
+        setError('Message cannot be empty')
+        return
+      }
+
+      if (!currentPlayerId || !round) {
+        setError('Missing player or round information')
+        return
+      }
+
+      const newMessage = await createMessage({
+        content: messageContent,
+        sender: { id: currentPlayerId },
+        round: { id: Number(roundId) },
+      })
+
+      setMessages((currentMessages) => [...(Array.isArray(currentMessages) ? currentMessages : []), newMessage])
+      setMessageContent('')
+      setError('')
+    } catch (err) {
+      setError(err.message || 'Failed to send message')
     }
   }
 
@@ -39,7 +100,7 @@ export default function DiscussionPage() {
       setRound(updatedRound)
       navigate(`/game/${gameId}/voting/${roundId}`)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to advance phase')
+      setError(err.message || 'Failed to advance phase')
     }
   }
 
@@ -64,15 +125,18 @@ export default function DiscussionPage() {
           </div>
 
           <div className="card">
-            <h2>Statements</h2>
-            <p style={{ fontStyle: 'italic', marginBottom: '10px' }}>
-              Discuss these statements. Which one is a lie?
+            <h2>Statements to Discuss</h2>
+            <p style={{ fontStyle: 'italic', marginBottom: '15px' }}>
+              Review these statements and discuss which one is the lie:
             </p>
             {statements.length > 0 ? (
               <ol>
                 {statements.map((stmt) => (
-                  <li key={stmt.id} style={{ marginBottom: '10px' }}>
-                    {stmt.content}
+                  <li key={stmt.id} style={{ marginBottom: '15px' }}>
+                    <div>{stmt.content}</div>
+                    <div style={{ fontSize: '0.85em', color: '#666', marginTop: '5px' }}>
+                      {stmt.isLie !== null && stmt.isLie && '🚩 Marked as lie'}
+                    </div>
                   </li>
                 ))}
               </ol>
@@ -82,20 +146,54 @@ export default function DiscussionPage() {
           </div>
 
           <div className="card">
-            <h2>Discussion Timer</h2>
-            <p>
-              <strong>Time given:</strong> {discussionTime} minutes
-            </p>
-            <p style={{ fontSize: '0.9em', color: '#666' }}>
-              players have time to discuss and identify which statement is the lie
-            </p>
+            <h2>Discussion Chat</h2>
+            <div
+              style={{
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                padding: '12px',
+                height: '300px',
+                overflowY: 'auto',
+                backgroundColor: '#f9f9f9',
+                marginBottom: '15px',
+              }}
+            >
+              {(Array.isArray(messages) ? messages : []).length > 0 ? (
+                (Array.isArray(messages) ? messages : []).map((msg) => (
+                  <div key={msg.id} style={{ marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px solid #eee' }}>
+                    <div style={{ fontSize: '0.9em', color: '#666' }}>
+                      <strong>{msg.senderName || `Player #${msg.senderId}`}</strong>
+                      {msg.sentAt && <span style={{ marginLeft: '8px' }}>({new Date(msg.sentAt).toLocaleTimeString()})</span>}
+                    </div>
+                    <div style={{ marginTop: '4px' }}>{msg.content}</div>
+                  </div>
+                ))
+              ) : (
+                <p style={{ color: '#999', fontStyle: 'italic' }}>No messages yet. Start the discussion!</p>
+              )}
+            </div>
+
+            <form onSubmit={handleSendMessage}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <textarea
+                  value={messageContent}
+                  onChange={(e) => setMessageContent(e.target.value)}
+                  placeholder="Type your message..."
+                  rows="2"
+                  style={{ flex: 1 }}
+                />
+                <button type="submit" className="primary-button" style={{ alignSelf: 'flex-start' }}>
+                  Send
+                </button>
+              </div>
+            </form>
           </div>
 
           <button onClick={handleAdvanceToVoting} className="primary-button">
-            Time's Up - Go to Voting
+            Discussion Over - Go to Voting
           </button>
 
-          <button onClick={() => navigate(`/game/${gameId}/lobby/${gameId}`)}>Back to Lobby</button>
+          <button onClick={() => navigate(`/game/${gameId}/lobby`)}>Back to Lobby</button>
         </>
       )}
     </div>

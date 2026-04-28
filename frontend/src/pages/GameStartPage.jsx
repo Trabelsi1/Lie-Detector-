@@ -14,11 +14,19 @@ function GameStartPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [targetCycles, setTargetCycles] = useState(2)
 
   const selectedRoom = useMemo(
     () => rooms.find((room) => String(room.id) === String(selectedRoomId)),
     [rooms, selectedRoomId],
   )
+
+  const isCurrentPlayerInSelectedRoom = useMemo(() => {
+    if (!selectedRoom || !currentPlayerId) return false
+    return Array.isArray(selectedRoom.players)
+      ? selectedRoom.players.some((player) => String(player?.id) === String(currentPlayerId))
+      : false
+  }, [selectedRoom, currentPlayerId])
 
   async function loadRooms() {
     try {
@@ -50,8 +58,8 @@ function GameStartPage() {
 
   useEffect(() => {
     loadRooms()
-    // Load current player ID from localStorage (should be set after player selection)
-    const playerId = localStorage.getItem('currentPlayerId')
+    // Load current player ID from sessionStorage (per-tab), fallback to old localStorage values.
+    const playerId = sessionStorage.getItem('currentPlayerId') || localStorage.getItem('currentPlayerId')
     if (playerId) {
       setCurrentPlayerId(playerId)
     }
@@ -78,16 +86,19 @@ function GameStartPage() {
     try {
       setError('')
       setMessage('')
+      const normalizedCycles = Math.max(1, Math.min(10, Number(targetCycles) || 2))
+
       const createdGame = await createGame({
         status: 'CREATED',
         currentRoundIndex: 0,
+        targetCycles: normalizedCycles,
         gameRoom: { id: Number(selectedRoom.id) },
       })
       setMessage(`Game #${createdGame.id ?? 'N/A'} created successfully! Entering game lobby...`)
       
       // Navigate to game lobby after a short delay
       setTimeout(() => {
-        navigate(`/game/${createdGame.id}/lobby/${createdGame.id}`)
+        navigate(`/game/${createdGame.id}/lobby`)
       }, 1500)
       
       await loadGamesForRoom(selectedRoom.id)
@@ -95,6 +106,19 @@ function GameStartPage() {
     } catch (apiError) {
       setError(apiError.message || 'Failed to create game')
     }
+  }
+
+  function handleJoinGame(gameId) {
+    if (!isCurrentPlayerInSelectedRoom) {
+      setError('You must be a player in this room before joining its game')
+      return
+    }
+    navigate(`/game/${gameId}/lobby`)
+  }
+
+  function isGameJoinable(game) {
+    const status = String(game?.status || '').toUpperCase()
+    return status !== 'FINISHED' && status !== 'COMPLETED' && status !== 'ENDED'
   }
 
   return (
@@ -121,11 +145,24 @@ function GameStartPage() {
           </p>
         ) : null}
 
+        <label>
+          Number of cycles (full speaker rotations)
+          <input
+            type="number"
+            min="1"
+            max="10"
+            value={targetCycles}
+            onChange={(event) => setTargetCycles(event.target.value)}
+          />
+        </label>
+        <p className="hint">Default: 2 cycles, max: 10 cycles</p>
+
         <button type="submit">Start game</button>
       </form>
 
       {error ? <p className="feedback error">{error}</p> : null}
       {message ? <p className="feedback success">{message}</p> : null}
+      {currentPlayerId ? <p className="hint">Current player in this tab: #{currentPlayerId}</p> : null}
 
       <section className="card">
         <h3>Games in selected room</h3>
@@ -138,6 +175,17 @@ function GameStartPage() {
               <strong>Game #{game.id ?? 'N/A'}</strong>
               <span>Status: {game.status ?? 'N/A'}</span>
               <span>Current round index: {game.currentRoundIndex ?? 0}</span>
+              {isGameJoinable(game) ? (
+                <button
+                  type="button"
+                  onClick={() => handleJoinGame(game.id)}
+                  disabled={!isCurrentPlayerInSelectedRoom}
+                >
+                  Join Lobby
+                </button>
+              ) : (
+                <span>Game is finished</span>
+              )}
             </li>
           ))}
         </ul>
