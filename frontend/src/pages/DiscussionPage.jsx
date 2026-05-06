@@ -134,9 +134,6 @@ export default function DiscussionPage() {
                 {statements.map((stmt) => (
                   <li key={stmt.id} style={{ marginBottom: '15px' }}>
                     <div>{stmt.content}</div>
-                    <div style={{ fontSize: '0.85em', color: '#666', marginTop: '5px' }}>
-                      {stmt.isLie !== null && stmt.isLie && '🚩 Marked as lie'}
-                    </div>
                   </li>
                 ))}
               </ol>

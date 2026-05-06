@@ -94,6 +94,13 @@ function GameStartPage() {
         targetCycles: normalizedCycles,
         gameRoom: { id: Number(selectedRoom.id) },
       })
+        setGames((currentGames) => {
+          const nextGames = Array.isArray(currentGames) ? [...currentGames] : []
+          if (createdGame?.id && !nextGames.some((game) => String(game.id) === String(createdGame.id))) {
+            nextGames.unshift(createdGame)
+          }
+          return nextGames.sort((left, right) => Number(right.id) - Number(left.id))
+        })
       setMessage(`Game #${createdGame.id ?? 'N/A'} created successfully! Entering game lobby...`)
       
       // Navigate to game lobby after a short delay

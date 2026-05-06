@@ -11,4 +11,3 @@ public interface StatementRepository extends JpaRepository<Statement, Long> {
 
     List<Statement> findByRoundIdOrderByPositionAsc(Long roundId);
 }
-

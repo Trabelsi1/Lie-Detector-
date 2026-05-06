@@ -39,6 +39,15 @@ public class StatementService {
                     "Maximum 3 statements per round reached");
         }
 
+        // If this statement is a lie, check that there isn't already one
+        if (statement.isLie()) {
+            long liesCount = existingStatements.stream().filter(Statement::isLie).count();
+            if (liesCount > 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "There can only be one lie per round");
+            }
+        }
+
         // Auto-assign position if not set
         if (statement.getPosition() == 0) {
             statement.setPosition(existingStatements.size() + 1);
@@ -57,5 +66,26 @@ public class StatementService {
 
     public List<Statement> getStatementsByRoundId(Long roundId) {
         return statementRepository.findByRoundIdOrderByPositionAsc(roundId);
+    }
+
+    public void deleteStatement(Long statementId) {
+        Statement statement = statementRepository.findById(statementId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Statement not found"));
+
+        // Check that the round is still in STATEMENT_SUBMISSION phase
+        if (statement.getRound() != null && !roundService.isInStatementSubmissionPhase(statement.getRound().getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Cannot delete statements after statement submission phase");
+        }
+
+        Long roundId = statement.getRound().getId();
+        statementRepository.deleteById(statementId);
+
+        // Reorder remaining statements
+        List<Statement> remainingStatements = statementRepository.findByRoundIdOrderByPositionAsc(roundId);
+        for (int i = 0; i < remainingStatements.size(); i++) {
+            remainingStatements.get(i).setPosition(i + 1);
+            statementRepository.save(remainingStatements.get(i));
+        }
     }
 }

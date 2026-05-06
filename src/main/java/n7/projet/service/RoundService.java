@@ -2,6 +2,7 @@ package n7.projet.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -9,9 +10,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 import n7.projet.entity.Round;
 import n7.projet.entity.Game;
+import n7.projet.entity.Statement;
 import n7.projet.repository.GameRepository;
 import n7.projet.repository.RoundRepository;
 import n7.projet.repository.VoteRepository;
+import n7.projet.repository.StatementRepository;
 
 @Service
 public class RoundService {
@@ -21,15 +24,17 @@ public class RoundService {
     private final ScoreEntryService scoreEntryService;
     private final GameRepository gameRepository;
     private final GameAwardsService gameAwardsService;
+    private final StatementRepository statementRepository;
 
     public RoundService(RoundRepository roundRepository, VoteRepository voteRepository,
             ScoreEntryService scoreEntryService, GameRepository gameRepository,
-            GameAwardsService gameAwardsService) {
+            GameAwardsService gameAwardsService, StatementRepository statementRepository) {
         this.roundRepository = roundRepository;
         this.voteRepository = voteRepository;
         this.scoreEntryService = scoreEntryService;
         this.gameRepository = gameRepository;
         this.gameAwardsService = gameAwardsService;
+        this.statementRepository = statementRepository;
     }
 
     public Round createRound(Round round) {
@@ -71,6 +76,19 @@ public class RoundService {
         String nextPhase;
 
         if ("STATEMENT_SUBMISSION".equals(currentPhase)) {
+            // Validate exactly 3 statements with exactly 1 lie before advancing to
+            // discussion
+            // Query database directly to get fresh data (not cached Set)
+            List<Statement> statements = statementRepository.findByRoundIdOrderByPositionAsc(roundId);
+            if (statements == null || statements.size() != 3) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Round must have exactly 3 statements before advancing");
+            }
+            long liesCount = statements.stream().filter(Statement::isLie).count();
+            if (liesCount != 1) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Round must have exactly one lie before advancing to discussion");
+            }
             nextPhase = "DISCUSSION";
         } else if ("DISCUSSION".equals(currentPhase)) {
             nextPhase = "VOTING";

@@ -7,11 +7,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import n7.projet.entity.Statement;
+import n7.projet.entity.Round;
 import n7.projet.service.StatementService;
 
 @RestController
@@ -49,8 +51,25 @@ public class StatementController {
         return statementService.getStatementsByRoundId(roundId).stream().map(this::toResponse).toList();
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteStatement(@PathVariable Long id) {
+        statementService.deleteStatement(id);
+        return ResponseEntity.noContent().build();
+    }
+
     private StatementResponse toResponse(Statement statement) {
-        boolean revealLie = statement.getRound() != null && "RESULTS".equals(statement.getRound().getPhase());
+        // Always need to reload the round to get fresh phase data
+        Round round = statement.getRound();
+        String phase = null;
+        if (round != null) {
+            // Ensure we have the latest round data
+            phase = round.getPhase();
+        }
+
+        // Only reveal lie during STATEMENT_SUBMISSION and RESULTS
+        boolean revealLie = phase != null &&
+                ("RESULTS".equals(phase) || "STATEMENT_SUBMISSION".equals(phase));
+
         return new StatementResponse(
                 statement.getId(),
                 statement.getContent(),

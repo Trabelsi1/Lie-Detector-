@@ -59,7 +59,7 @@ public class GameService {
     }
 
     public List<Game> getGamesByRoomId(Long roomId) {
-        return gameRepository.findByGameRoomId(roomId);
+        return gameRepository.findByGameRoomIdOrderByIdDesc(roomId);
     }
 
     /**
@@ -178,7 +178,8 @@ public class GameService {
         }
 
         boolean allCyclesDone = "COMPLETED".equalsIgnoreCase(String.valueOf(game.getStatus()))
-                || (game.getCurrentCycle() >= targetCycles && cyclePlayerCount > 0 && completedInCycle >= cyclePlayerCount);
+                || (game.getCurrentCycle() >= targetCycles && cyclePlayerCount > 0
+                        && completedInCycle >= cyclePlayerCount);
 
         if (allCyclesDone) {
             game.setStatus("COMPLETED");

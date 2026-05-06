@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getRoundById, advancePhase } from '../services/roundsApi'
-import { getStatementsByRoundId, createStatement } from '../services/statementsApi'
+import { getStatementsByRoundId, createStatement, deleteStatement } from '../services/statementsApi'
 
 export default function StatementSubmissionPage() {
   const { gameId, roundId } = useParams()
@@ -100,6 +100,16 @@ export default function StatementSubmissionPage() {
     }
   }
 
+  async function handleDeleteStatement(statementId) {
+    try {
+      await deleteStatement(statementId)
+      setStatements(statements.filter(stmt => stmt.id !== statementId))
+      setError('')
+    } catch (err) {
+      setError(err.message || 'Failed to delete statement')
+    }
+  }
+
   async function handleAdvancePhase() {
     try {
       if (statements.length !== 3) {
@@ -164,9 +174,20 @@ export default function StatementSubmissionPage() {
                       type="checkbox"
                       id="isLie"
                       checked={formData.isLie}
-                      onChange={(e) => setFormData({ ...formData, isLie: e.target.checked })}
+                      onChange={(e) => {
+                        // If checking and already have a lie, prevent it
+                        const hasExistingLie = statements.some(stmt => {
+                          return stmt.isLie === true || stmt.isLie === 'true' || !!stmt.isLie
+                        })
+                        if (e.target.checked && hasExistingLie) {
+                          setError('You can only have one lie per round. Uncheck the other statement first.')
+                          return
+                        }
+                        setFormData({ ...formData, isLie: e.target.checked })
+                        setError('')
+                      }}
                     />
-                    This statement is the lie
+                    Mark as lie
                   </label>
                 </div>
 
@@ -182,9 +203,24 @@ export default function StatementSubmissionPage() {
             {statements.length > 0 ? (
               <ol>
                 {statements.map((stmt) => (
-                  <li key={stmt.id}>
-                    {stmt.content}
-                    {stmt.isLie && ' <-- THIS IS THE LIE'}
+                  <li key={stmt.id} style={{ marginBottom: '10px' }}>
+                    <div>{stmt.content}</div>
+                    {isAllowedToSubmit && (
+                      <button
+                        onClick={() => handleDeleteStatement(stmt.id)}
+                        style={{
+                          marginTop: '5px',
+                          padding: '5px 10px',
+                          backgroundColor: '#ff6b6b',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Delete
+                      </button>
+                    )}
                   </li>
                 ))}
               </ol>

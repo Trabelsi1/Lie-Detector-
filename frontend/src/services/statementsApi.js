@@ -9,3 +9,7 @@ export async function createStatement(payload) {
   const { data } = await apiClient.post('/statements', payload)
   return data
 }
+
+export async function deleteStatement(statementId) {
+  await apiClient.delete(`/statements/${statementId}`)
+}
