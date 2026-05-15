@@ -3,7 +3,7 @@ function HomePage() {
     <section className="page">
       <h2>Frontend Started</h2>
       <p>
-        This is the first React + Vite iteration. The flow is now users first, then players, then rooms.
+        Welcome to Lie Detector Arena.
       </p>
       <div className="cards-row">
         <article className="card">
