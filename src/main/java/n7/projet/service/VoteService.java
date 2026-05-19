@@ -49,19 +49,16 @@ public class VoteService {
         Statement statement = statementRepository.findById(statementId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Statement not found"));
 
-        // Voter cannot be the speaker
         if (round.getSpeakerId() != null && round.getSpeakerId().equals(voterId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Speaker cannot vote on their own statements");
         }
 
-        // Check if voter already voted in this round
         if (voteRepository.existsByRoundIdAndVoterId(roundId, voterId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Player has already voted in this round");
         }
 
-        // Check round is in VOTING phase
         if (round.getPhase() == null || !round.getPhase().equals("VOTING")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Round is not in voting phase");

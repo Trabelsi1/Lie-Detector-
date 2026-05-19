@@ -25,13 +25,11 @@ public class StatementService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Round is required");
         }
 
-        // Validate round is in STATEMENT_SUBMISSION phase
         if (!roundService.isInStatementSubmissionPhase(statement.getRound().getId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Round is not in statement submission phase");
         }
 
-        // Check max 3 statements per round
         List<Statement> existingStatements = statementRepository
                 .findByRoundIdOrderByPositionAsc(statement.getRound().getId());
         if (existingStatements.size() >= 3) {
@@ -39,7 +37,6 @@ public class StatementService {
                     "Maximum 3 statements per round reached");
         }
 
-        // If this statement is a lie, check that there isn't already one
         if (statement.isLie()) {
             long liesCount = existingStatements.stream().filter(Statement::isLie).count();
             if (liesCount > 0) {
@@ -48,7 +45,6 @@ public class StatementService {
             }
         }
 
-        // Auto-assign position if not set
         if (statement.getPosition() == 0) {
             statement.setPosition(existingStatements.size() + 1);
         }
@@ -72,7 +68,6 @@ public class StatementService {
         Statement statement = statementRepository.findById(statementId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Statement not found"));
 
-        // Check that the round is still in STATEMENT_SUBMISSION phase
         if (statement.getRound() != null && !roundService.isInStatementSubmissionPhase(statement.getRound().getId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Cannot delete statements after statement submission phase");
@@ -81,7 +76,6 @@ public class StatementService {
         Long roundId = statement.getRound().getId();
         statementRepository.deleteById(statementId);
 
-        // Reorder remaining statements
         List<Statement> remainingStatements = statementRepository.findByRoundIdOrderByPositionAsc(roundId);
         for (int i = 0; i < remainingStatements.size(); i++) {
             remainingStatements.get(i).setPosition(i + 1);

@@ -63,10 +63,7 @@ public class RoundService {
         return roundRepository.findByGameIdAndRoundNumber(gameId, roundNumber).orElse(null);
     }
 
-    /**
-     * Advances the round phase to the next state. Valid transitions:
-     * STATEMENT_SUBMISSION -> DISCUSSION -> VOTING -> RESULTS
-     */
+    
     public Round advancePhase(Long roundId) {
         Round round = roundRepository.findById(roundId)
                 .orElseThrow(
@@ -76,9 +73,6 @@ public class RoundService {
         String nextPhase;
 
         if ("STATEMENT_SUBMISSION".equals(currentPhase)) {
-            // Validate exactly 3 statements with exactly 1 lie before advancing to
-            // discussion
-            // Query database directly to get fresh data (not cached Set)
             List<Statement> statements = statementRepository.findByRoundIdOrderByPositionAsc(roundId);
             if (statements == null || statements.size() != 3) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -173,18 +167,13 @@ public class RoundService {
         return new VotingStatus(requiredVotes, submittedVotes, complete);
     }
 
-    /**
-     * Checks if a round is still in STATEMENT_SUBMISSION phase (statements can be
-     * added).
-     */
+    
     public boolean isInStatementSubmissionPhase(Long roundId) {
         Round round = roundRepository.findById(roundId).orElse(null);
         return round != null && "STATEMENT_SUBMISSION".equals(round.getPhase());
     }
 
-    /**
-     * Checks if a round is in VOTING phase.
-     */
+    
     public boolean isInVotingPhase(Long roundId) {
         Round round = roundRepository.findById(roundId).orElse(null);
         return round != null && "VOTING".equals(round.getPhase());

@@ -32,7 +32,6 @@ export default function DiscussionPage() {
 
         setRound(latestRound)
 
-        // Refresh messages periodically
         const msg = await getMessagesByRoundId(roundId)
         setMessages(msg)
 
